@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Câu Hỏi Trắc Nghiệm Sinh Động</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .quiz-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 550px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        h2 { color: #2c3e50; margin-bottom: 10px; }
+        .question { font-size: 18px; margin-bottom: 25px; color: #444; line-height: 1.5; }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            padding: 15px 20px;
+            font-size: 17px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .option-btn:hover {
+            background-color: #f8f9fa;
+            border-color: #cbd5e0;
+            transform: translateY(-2px);
+        }
+
+        /* Màu sắc khi chọn */
+        .correct {
+            background-color: #2ecc71 !important;
+            color: white !important;
+            border-color: #27ae60 !important;
+        }
+
+        .wrong {
+            background-color: #e74c3c !important;
+            color: white !important;
+            border-color: #c0392b !important;
+        }
+
+        #message {
+            margin-top: 25px;
+            font-size: 18px;
+            font-weight: bold;
+            height: 30px;
+        }
+
+        /* Hiệu ứng mặt khóc rơi */
+        .falling-icon {
+            position: absolute;
+            top: -50px;
+            font-size: 40px;
+            animation: fall linear forwards;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>🎯 Câu Hỏi Trắc Nghiệm</h2>
+    <p class="question">Theo em, những hình ảnh vừa quan sát thuộc loại hình dạng nào?</p>
+    
+    <div class="options">
+        <button class="option-btn" id="btn-A" onclick="checkAnswer('A')">A. Hình tam giác</button>
+        <button class="option-btn" id="btn-B" onclick="checkAnswer('B')">B. Hình tròn</button>
+        <button class="option-btn" id="btn-C" onclick="checkAnswer('C')">C. Hình tứ giác</button>
+        <button class="option-btn" id="btn-D" onclick="checkAnswer('D')">D. Tất cả đều sai</button>
+    </div>
+
+    <div id="message"></div>
+</div>
+
+<script>
+    function checkAnswer(choice) {
+        // Reset trạng thái các nút trước khi kiểm tra
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(btn => {
+            btn.classList.remove('correct', 'wrong');
+        });
+
+        const messageDiv = document.getElementById('message');
+        const selectedBtn = document.getElementById('btn-' + choice);
+        
+        if (choice === 'C') {
+            // Xử lý khi ĐÚNG
+            selectedBtn.classList.add('correct');
+            messageDiv.innerHTML = "<span style='color: #27ae60'>🎉 Chúc mừng em đã dự đoán đúng!</span>";
+            
+            // Pháo giấy bung lên
+            let duration = 3 * 1000;
+            let end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: 10,
+                    angle: 60,
+                    spread: 70,
+                    origin: { x: 0, y: 0.8 }
+                });
+                confetti({
+                    particleCount: 10,
+                    angle: 120,
+                    spread: 70,
+                    origin: { x: 1, y: 0.8 }
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+
+        } else {
+            // Xử lý khi SAI
+            selectedBtn.classList.add('wrong');
+            messageDiv.innerHTML = "<span style='color: #e74c3c'>Em hãy quan sát kĩ lại nhé! 😢</span>";
+            
+            // Tạo icon mặt khóc rơi xuống
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const icon = document.createElement('div');
+                    icon.classList.add('falling-icon');
+                    icon.textContent = '😢';
+                    icon.style.left = Math.random() * 100 + 'vw';
+                    icon.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    document.body.appendChild(icon);
+
+                    icon.addEventListener('animationend', () => icon.remove());
+                }, i * 100);
+            }
+        }
+    }
+</script>
+
+</body>
+</html>
