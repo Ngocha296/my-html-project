@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<title>Tổng các góc của tứ giác</title>
+<style>
+  body { font-family: Arial, sans-serif; }
+  canvas { border: 1px solid #ccc; cursor: pointer; }
+  button { margin-top: 10px; padding: 6px 12px; }
+</style>
+</head>
+<body>
+
+<h3>Khám phá tổng các góc của một tứ giác</h3>
+<canvas id="canvas" width="600" height="400"></canvas><br>
+<button onclick="toggleDiagonal()">Hiện / Ẩn đường chéo AC</button>
+<p id="info"></p>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let showDiagonal = true;
+let dragging = null;
+
+let points = {
+  A: {x:150, y:100},
+  B: {x:400, y:80},
+  C: {x:480, y:300},
+  D: {x:120, y:320}
+};
+
+function angle(p, q, r) {
+  const v1 = {x: p.x - q.x, y: p.y - q.y};
+  const v2 = {x: r.x - q.x, y: r.y - q.y};
+  const dot = v1.x*v2.x + v1.y*v2.y;
+  const mag = Math.hypot(v1.x, v1.y) * Math.hypot(v2.x, v2.y);
+  return Math.acos(dot/mag) * 180 / Math.PI;
+}
+
+function draw() {
+  ctx.clearRect(0,0,600,400);
+
+  // polygon
+  ctx.beginPath();
+  ctx.moveTo(points.A.x, points.A.y);
+  ["B","C","D","A"].forEach(p => ctx.lineTo(points[p].x, points[p].y));
+  ctx.strokeStyle = "blue";
+  ctx.stroke();
+
+  // diagonal AC
+  if(showDiagonal){
+    ctx.beginPath();
+    ctx.moveTo(points.A.x, points.A.y);
+    ctx.lineTo(points.C.x, points.C.y);
+    ctx.strokeStyle = "gray";
+    ctx.stroke();
+  }
+
+  // points
+  for (let k in points) {
+    ctx.beginPath();
+    ctx.arc(points[k].x, points[k].y, 6, 0, Math.PI*2);
+    ctx.fillStyle = "red";
+    ctx.fill();
+    ctx.fillText(k, points[k].x+8, points[k].y-8);
+  }
+
+  // calculations
+  let T1 = angle(points.A, points.B, points.C)
+         + angle(points.B, points.C, points.A)
+         + angle(points.C, points.A, points.B);
+
+  let T2 = angle(points.A, points.C, points.D)
+         + angle(points.C, points.D, points.A)
+         + angle(points.D, points.A, points.C);
+
+  let T = angle(points.A, points.B, points.C)
+        + angle(points.B, points.C, points.D)
+        + angle(points.C, points.D, points.A)
+        + angle(points.D, points.A, points.B);
+
+  document.getElementById("info").innerHTML =
+    showDiagonal
+    ? `T₁ = ${T1.toFixed(1)}°, T₂ = ${T2.toFixed(1)}°, T₁ + T₂ = ${(T1+T2).toFixed(1)}°`
+    : `T = ${T.toFixed(1)}°`;
+}
+
+canvas.onmousedown = e => {
+  for (let k in points) {
+    let p = points[k];
+    if (Math.hypot(p.x-e.offsetX, p.y-e.offsetY) < 10) dragging = k;
+  }
+};
+
+canvas.onmousemove = e => {
+  if(dragging){
+    points[dragging].x = e.offsetX;
+    points[dragging].y = e.offsetY;
+    draw();
+  }
+};
+
+canvas.onmouseup = () => dragging = null;
+
+function toggleDiagonal(){
+  showDiagonal = !showDiagonal;
+  draw();
+}
+
+draw();
+</script>
+</body>
+</html>
