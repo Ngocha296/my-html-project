@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ Đồ Tư Duy: Hình Chữ Nhật</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Palette màu sắc tươi sáng */
+            --bg-body: #f0f4f8;
+            --main-node-bg: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            --c-concept: #00b894; /* Xanh lá */
+            --c-prop: #0984e3;    /* Xanh dương */
+            --c-sign: #e17055;    /* Cam đất */
+            --text-color: #2d3436;
+            --pool-bg: #ffffff;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg-body);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 { margin-bottom: 10px; color: #2c3e50; }
+        .instruction { color: #636e72; margin-bottom: 30px; }
+
+        /* KHO ĐÁP ÁN */
+        #answer-pool {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px;
+            background: var(--pool-bg);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 900px;
+            min-height: 80px;
+            border: 2px dashed #b2bec3;
+            margin-bottom: 50px;
+        }
+
+        /* THẺ KÉO */
+        .draggable-item {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: grab;
+            font-size: 14px;
+            font-weight: 600;
+            border-left: 5px solid #b2bec3;
+            user-select: none;
+        }
+        
+        .draggable-item:active { cursor: grabbing; transform: scale(1.05); }
+        
+        .draggable-item.correct {
+            cursor: default;
+            background-color: #fff;
+            box-shadow: none;
+            border: 2px solid; 
+        }
+
+        /* MINDMAP UI */
+        .mindmap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .center-node {
+            background: var(--main-node-bg);
+            color: white;
+            padding: 20px 50px;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            z-index: 10;
+            margin-bottom: 50px;
+            box-shadow: 0 10px 20px rgba(108, 92, 231, 0.3);
+            position: relative;
+        }
+        /* Đường kẻ dọc nối xuống */
+        .center-node::after {
+            content: ''; position: absolute; bottom: -50px; left: 50%; 
+            width: 4px; height: 50px; background: #b2bec3; z-index: -1;
+        }
+
+        .branches-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            position: relative;
+            padding-top: 20px;
+        }
+        /* Đường kẻ ngang nối các nhánh */
+        .branches-container::before {
+            content: ''; position: absolute; top: 0; left: 16%; right: 16%; 
+            height: 4px; background: #b2bec3;
+        }
+
+        .branch-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 10px;
+            position: relative;
+        }
+        /* Đường nối con */
+        .branch-col::before {
+            content: ''; position: absolute; top: -20px; left: 50%;
+            width: 4px; height: 20px; background: #b2bec3;
+        }
+
+        .branch-title {
+            padding: 10px 25px;
+            border-radius: 20px;
+            color: white;
+            font-weight: 700;
+            margin-bottom: 20px;
+            z-index: 2;
+        }
+        
+        /* Màu tiêu đề */
+        .col-concept .branch-title { background: var(--c-concept); }
+        .col-prop .branch-title { background: var(--c-prop); }
+        .col-sign .branch-title { background: var(--c-sign); }
+
+        /* VÙNG THẢ */
+        .drop-zone {
+            width: 100%;
+            min-height: 120px;
+            background: rgba(255,255,255,0.6);
+            border: 2px dashed #d1d8e0;
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            transition: 0.3s;
+        }
+
+        .drop-zone.hover { transform: scale(1.02); background: white; }
+        
+        /* Màu viền khi hover */
+        .col-concept .drop-zone.hover { border-color: var(--c-concept); }
+        .col-prop .drop-zone.hover { border-color: var(--c-prop); }
+        .col-sign .drop-zone.hover { border-color: var(--c-sign); }
+
+        /* Màu thẻ khi đúng */
+        .col-concept .draggable-item.correct { border-color: var(--c-concept); color: var(--c-concept); background: #e6fffa; }
+        .col-prop .draggable-item.correct { border-color: var(--c-prop); color: var(--c-prop); background: #e3f2fd; }
+        .col-sign .draggable-item.correct { border-color: var(--c-sign); color: var(--c-sign); background: #fcece8; }
+
+        /* Hiệu ứng SAI */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .drop-zone.error {
+            animation: shake 0.4s;
+            border-color: #e74c3c !important;
+            background-color: #ffeaa7;
+        }
+
+        /* Ẩn đường kẻ trên mobile */
+        @media (max-width: 768px) {
+            .branches-container { flex-direction: column; gap: 30px; }
+            .branches-container::before, .center-node::after, .branch-col::before { display: none; }
+            .branch-col { border-left: 3px solid #dfe6e9; padding-left: 20px; }
+        }
+
+        /* Hoàn thành */
+        body.finished #answer-pool { display: none; }
+    </style>
+</head>
+<body>
+
+    <h1>BÀI 4: HÌNH CHỮ NHẬT</h1>
+    <p class="instruction">Kéo thẻ vào đúng nhánh. Sai sẽ bị trả lại!</p>
+
+    <div id="answer-pool"></div>
+
+    <div class="mindmap">
+        <div class="center-node">HÌNH CHỮ NHẬT</div>
+        <div class="branches-container">
+            <div class="branch-col col-concept">
+                <div class="branch-title">Khái niệm</div>
+                <div class="drop-zone" data-category="khai-niem"></div>
+            </div>
+            <div class="branch-col col-prop">
+                <div class="branch-title">Tính chất</div>
+                <div class="drop-zone" data-category="tinh-chat"></div>
+            </div>
+            <div class="branch-col col-sign">
+                <div class="branch-title">Dấu hiệu</div>
+                <div class="drop-zone" data-category="dau-hieu"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const lessonData = [
+            { id: 'c1', text: 'Tứ giác có 4 góc vuông', category: 'khai-niem' },
+            { id: 'p1', text: 'Hai đường chéo bằng nhau', category: 'tinh-chat' },
+            { id: 'p2', text: 'Hai đường chéo cắt nhau tại trung điểm mỗi đường', category: 'tinh-chat' },
+            { id: 's1', text: 'Hình bình hành có 1 góc vuông', category: 'dau-hieu' },
+            { id: 's2', text: 'Hình bình hành có 2 đường chéo bằng nhau', category: 'dau-hieu' }
+        ];
+
+        let correctCount = 0;
+        const totalItems = lessonData.length;
+        const pool = document.getElementById('answer-pool');
+        const dropZones = document.querySelectorAll('.drop-zone');
+
+        // Hàm xáo trộn
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        // Tạo thẻ
+        function init() {
+            shuffle([...lessonData]).forEach(item => {
+                const el = document.createElement('div');
+                el.className = 'draggable-item';
+                el.draggable = true;
+                el.id = item.id;
+                el.setAttribute('data-cat', item.category);
+                el.innerText = item.text;
+                
+                el.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('text', e.target.id);
+                    e.target.style.opacity = '0.5';
+                });
+                
+                el.addEventListener('dragend', e => {
+                    e.target.style.opacity = '1';
+                });
+                
+                pool.appendChild(el);
+            });
+        }
+
+        // Xử lý sự kiện Drop
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', e => {
+                e.preventDefault();
+                zone.classList.add('hover');
+            });
+
+            zone.addEventListener('dragleave', () => zone.classList.remove('hover'));
+
+            zone.addEventListener('drop', e => {
+                e.preventDefault();
+                zone.classList.remove('hover');
+
+                const id = e.dataTransfer.getData('text');
+                const drgEl = document.getElementById(id);
+                if (!drgEl) return;
+
+                const itemCat = drgEl.getAttribute('data-cat');
+                const zoneCat = zone.getAttribute('data-category');
+
+                if (itemCat === zoneCat) {
+                    // ĐÚNG
+                    zone.appendChild(drgEl);
+                    drgEl.classList.add('correct');
+                    drgEl.draggable = false;
+                    
+                    // Clone để xóa event listener cũ
+                    drgEl.replaceWith(drgEl.cloneNode(true));
+
+                    correctCount++;
+                    if (correctCount === totalItems) {
+                        setTimeout(() => {
+                            document.body.classList.add('finished');
+                            alert("Chúc mừng! Bạn đã hoàn thành.");
+                        }, 300);
+                    }
+                } else {
+                    // SAI
+                    zone.classList.add('error');
+                    setTimeout(() => zone.classList.remove('error'), 400);
+                }
+            });
+        });
+
+        init();
+    </script>
+</body>
+</html>
