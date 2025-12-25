@@ -1,1 +1,373 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ Đồ Tư Duy: Hình Thoi</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --branch-def: #3498db; /* Xanh dương - Khái niệm */
+            --branch-prop: #e67e22; /* Cam - Tính chất */
+            --branch-sign: #27ae60; /* Xanh lá - Dấu hiệu */
+            --bg-color: #f0f4f8;
+            --text-color: #333;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        /* --- Vùng chứa Sơ đồ --- */
+        .mindmap-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 30px;
+        }
+
+        /* Nút trung tâm */
+        .center-node {
+            background: var(--primary-color);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 2;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        /* Tạo đường nối giả */
+        .center-node::after {
+            content: '';
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 40px;
+            background: #ccc;
+        }
+
+        /* Các nhánh (Drop Zones) */
+        .branches {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 20px;
+            position: relative;
+        }
+
+        /* Đường ngang nối các nhánh */
+        .branches::before {
+            content: '';
+            position: absolute;
+            top: -20px; /* Khớp với chiều cao line từ center node */
+            left: 16%; /* Căn chỉnh tùy theo số lượng nhánh */
+            right: 16%;
+            height: 4px;
+            background: #ccc;
+            z-index: 0;
+        }
+
+        .branch-column {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Đường nối dọc xuống tiêu đề nhánh */
+        .branch-column::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            width: 4px;
+            height: 20px;
+            background: #ccc;
+        }
+
+        .branch-header {
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 15px;
+            width: 80%;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 1;
+        }
+
+        .bg-def { background-color: var(--branch-def); }
+        .bg-prop { background-color: var(--branch-prop); }
+        .bg-sign { background-color: var(--branch-sign); }
+
+        /* Vùng thả (Drop Zone) */
+        .drop-zone {
+            width: 90%;
+            min-height: 200px;
+            background: rgba(255, 255, 255, 0.5);
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: background 0.3s;
+        }
+
+        .drop-zone.drag-over {
+            background: #e1e1e1;
+            border-color: #666;
+        }
+
+        /* --- Các thẻ kéo thả (Draggables) --- */
+        .item-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            width: 100%;
+            max-width: 1000px;
+            min-height: 100px;
+            border: 1px solid #ddd;
+        }
+
+        .draggable {
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: grab;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 0.95rem;
+            max-width: 250px;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .draggable:active {
+            cursor: grabbing;
+            opacity: 0.8;
+            transform: scale(1.02);
+        }
+
+        /* Trạng thái đúng */
+        .draggable.correct {
+            cursor: default;
+            border-color: transparent;
+            color: white;
+            box-shadow: none;
+        }
+        /* Màu sắc khi đúng theo từng loại */
+        .draggable.correct[data-category="concept"] { background-color: var(--branch-def); }
+        .draggable.correct[data-category="property"] { background-color: var(--branch-prop); }
+        .draggable.correct[data-category="sign"] { background-color: var(--branch-sign); }
+
+        /* Trạng thái sai (Hiệu ứng rung và đỏ) */
+        .draggable.shake {
+            animation: shake 0.5s;
+            border: 2px solid #e74c3c;
+            background-color: #fadbd8;
+        }
+
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Bài 5: Hình Thoi</h1>
+
+    <div class="mindmap-container">
+        <div class="center-node">HÌNH THOI</div>
+
+        <div class="branches">
+            <div class="branch-column">
+                <div class="branch-header bg-def">Khái niệm</div>
+                <div class="drop-zone" data-target="concept" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    </div>
+            </div>
+
+            <div class="branch-column">
+                <div class="branch-header bg-prop">Tính chất</div>
+                <div class="drop-zone" data-target="property" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    </div>
+            </div>
+
+            <div class="branch-column">
+                <div class="branch-header bg-sign">Dấu hiệu nhận biết</div>
+                <div class="drop-zone" data-target="sign" ondrop="drop(event)" ondragover="allowDrop(event)">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <h3>Kho dữ liệu (Kéo các ý dưới đây vào nhánh phù hợp)</h3>
+    <div class="item-pool" id="pool" ondrop="return false;" ondragover="return false;">
+        </div>
+
+    <script>
+        // Dữ liệu bài học
+        const lessonData = [
+            { id: 1, text: "Tứ giác có bốn cạnh bằng nhau", type: "concept" },
+            { id: 2, text: "Hai đường chéo vuông góc với nhau", type: "property" },
+            { id: 3, text: "Hai đường chéo là các đường phân giác của các góc", type: "property" },
+            { id: 4, text: "Hình bình hành có hai cạnh kề bằng nhau", type: "sign" },
+            { id: 5, text: "Hình bình hành có hai đường chéo vuông góc", type: "sign" },
+            { id: 6, text: "Hình bình hành có một đường chéo là phân giác của một góc", type: "sign" }
+        ];
+
+        // Hàm trộn mảng (Fisher-Yates Shuffle)
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex != 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // Khởi tạo giao diện
+        function init() {
+            const pool = document.getElementById('pool');
+            const shuffledData = shuffle([...lessonData]); // Tạo bản sao và trộn
+
+            shuffledData.forEach(item => {
+                const el = document.createElement('div');
+                el.classList.add('draggable');
+                el.setAttribute('draggable', 'true');
+                el.setAttribute('id', 'item-' + item.id);
+                el.setAttribute('data-category', item.type);
+                el.innerText = item.text;
+                
+                // Gán sự kiện drag
+                el.addEventListener('dragstart', dragStart);
+                
+                pool.appendChild(el);
+            });
+        }
+
+        // Xử lý sự kiện Drag
+        function dragStart(e) {
+            e.dataTransfer.setData("text/plain", e.target.id);
+            e.dataTransfer.effectAllowed = "move";
+        }
+
+        // Cho phép Drop
+        function allowDrop(e) {
+            e.preventDefault();
+            // Thêm hiệu ứng visual khi kéo vào vùng (tùy chọn)
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        // Xử lý sự kiện Drop
+        function drop(e) {
+            e.preventDefault();
+            const zone = e.currentTarget;
+            zone.classList.remove('drag-over');
+
+            const id = e.dataTransfer.getData("text/plain");
+            const draggableElement = document.getElementById(id);
+
+            // Kiểm tra Logic
+            const itemCategory = draggableElement.getAttribute('data-category');
+            const zoneCategory = zone.getAttribute('data-target');
+
+            if (itemCategory === zoneCategory) {
+                // ĐÚNG
+                handleCorrect(draggableElement, zone);
+            } else {
+                // SAI
+                handleIncorrect(draggableElement);
+            }
+        }
+
+        // Xử lý khi đúng
+        function handleCorrect(element, zone) {
+            // Thêm vào vùng mới
+            zone.appendChild(element);
+            
+            // Đổi giao diện thành công
+            element.classList.add('correct');
+            element.setAttribute('draggable', 'false'); // Khóa lại không cho kéo nữa
+            
+            // Xóa sự kiện drag để chắc chắn
+            element.removeEventListener('dragstart', dragStart);
+
+            // Kiểm tra hoàn thành (Optional: console log hoặc logic nội bộ)
+            checkCompletion();
+        }
+
+        // Xử lý khi sai
+        function handleIncorrect(element) {
+            // Thêm class rung và đỏ
+            element.classList.add('shake');
+
+            // Sau khi animation chạy xong (0.5s) thì gỡ bỏ class để có thể bị phạt tiếp nếu sai lần nữa
+            setTimeout(() => {
+                element.classList.remove('shake');
+            }, 500);
+        }
+
+        // Xóa style drag-over nếu kéo ra ngoài vùng (UX phụ trợ)
+        const zones = document.querySelectorAll('.drop-zone');
+        zones.forEach(zone => {
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drag-over');
+            });
+        });
+
+        function checkCompletion() {
+            const totalItems = lessonData.length;
+            const correctItems = document.querySelectorAll('.draggable.correct').length;
+            if (totalItems === correctItems) {
+                // Đã hoàn thành - Giữ nguyên kết quả như yêu cầu
+                console.log("Hoàn thành bài học!");
+            }
+        }
+
+        // Chạy khởi tạo
+        init();
+
+    </script>
+</body>
+</html>
