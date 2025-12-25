@@ -1,1 +1,301 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sơ Đồ Tư Duy: Hình Bình Hành</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;    /* Xanh dương chủ đạo */
+            --success-color: #10b981;    /* Xanh lá khi đúng */
+            --error-color: #ef4444;      /* Đỏ khi sai */
+            --bg-color: #f8fafc;
+            --branch-bg: #e0f2fe;
+            --item-bg: #ffffff;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none; /* Ngăn bôi đen văn bản khi kéo thả */
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .instruction {
+            color: #64748b;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+
+        /* KHUNG CHÍNH CỦA MINDMAP */
+        .mindmap-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+            gap: 20px;
+        }
+
+        /* TRUNG TÂM (ROOT) */
+        .center-node {
+            background: var(--primary-color);
+            color: white;
+            padding: 20px 40px;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        /* CÁC NHÁNH (ZONES) */
+        .branches-wrapper {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .branch {
+            flex: 1;
+            min-width: 300px;
+            background-color: var(--branch-bg);
+            border: 2px dashed #94a3b8;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        /* Tiêu đề của nhánh */
+        .branch-title {
+            background-color: white;
+            color: var(--primary-color);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid #bfdbfe;
+        }
+
+        /* KHO DỮ LIỆU (DRAGGABLE ITEMS) */
+        .item-pool {
+            margin-top: 30px;
+            width: 100%;
+            max-width: 1200px;
+            border-top: 2px solid #e2e8f0;
+            padding-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            min-height: 100px;
+        }
+
+        /* CÁC THẺ KÉO THẢ */
+        .draggable-item {
+            background-color: var(--item-bg);
+            border: 1px solid #cbd5e1;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: grab;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-size: 0.95rem;
+            max-width: 280px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            touch-action: none; /* Hỗ trợ touch tốt hơn */
+        }
+
+        .draggable-item:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* TRẠNG THÁI ĐÚNG */
+        .draggable-item.correct {
+            background-color: #d1fae5; /* Xanh nhạt */
+            border-color: var(--success-color);
+            color: #065f46;
+            cursor: default;
+            pointer-events: none; /* Khóa không cho kéo nữa */
+        }
+
+        .branch.hovered {
+            background-color: #dbeafe;
+            border-color: var(--primary-color);
+            transform: scale(1.01);
+        }
+
+        /* HIỆU ỨNG SAI (RUNG LẮC + ĐỎ) */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); background-color: #fee2e2; border-color: var(--error-color); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); background-color: var(--item-bg); border-color: #cbd5e1;}
+        }
+
+        .shake-error {
+            animation: shake 0.5s ease-in-out;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Hình Bình Hành</h1>
+    <p class="instruction">Nhiệm vụ: Kéo các thẻ nội dung ở dưới vào đúng nhánh của sơ đồ.</p>
+
+    <div class="mindmap-container">
+        <div class="center-node">HÌNH BÌNH HÀNH</div>
+
+        <div class="branches-wrapper">
+            <div class="branch" id="zone-khainiem" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="branch-title">Khái niệm</div>
+            </div>
+
+            <div class="branch" id="zone-tinhchat" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="branch-title">Tính chất</div>
+            </div>
+
+            <div class="branch" id="zone-dauhieu" ondrop="drop(event)" ondragover="allowDrop(event)" ondragenter="dragEnter(event)" ondragleave="dragLeave(event)">
+                <div class="branch-title">Dấu hiệu nhận biết</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="item-pool" id="pool">
+        </div>
+
+    <script>
+        // Dữ liệu bài học
+        const data = [
+            { id: 1, text: "Hình bình hành là tứ giác có các cạnh đối song song.", type: "zone-khainiem" },
+            
+            { id: 2, text: "Các cạnh đối bằng nhau", type: "zone-tinhchat" },
+            { id: 3, text: "Các góc đối bằng nhau", type: "zone-tinhchat" },
+            { id: 4, text: "Hai đường chéo cắt nhau tại trung điểm của mỗi đường", type: "zone-tinhchat" },
+
+            { id: 5, text: "TG có các cạnh đối song song là HBH", type: "zone-dauhieu" },
+            { id: 6, text: "TG có các cạnh đối bằng nhau là HBH", type: "zone-dauhieu" },
+            { id: 7, text: "TG có hai cạnh đối song song và bằng nhau là HBH", type: "zone-dauhieu" },
+            { id: 8, text: "TG có các góc đối bằng nhau là HBH", type: "zone-dauhieu" },
+            { id: 9, text: "TG có hai đường chéo cắt nhau tại trung điểm mỗi đường là HBH", type: "zone-dauhieu" }
+        ];
+
+        // Hàm trộn ngẫu nhiên mảng (Fisher-Yates Shuffle)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Khởi tạo giao diện
+        function initGame() {
+            const pool = document.getElementById('pool');
+            shuffleArray(data); // Đảo lộn đáp án
+            
+            data.forEach(item => {
+                const el = document.createElement('div');
+                el.classList.add('draggable-item');
+                el.setAttribute('draggable', 'true');
+                el.id = 'item-' + item.id;
+                el.innerText = item.text;
+                
+                // Lưu thông tin loại đáp án vào dataset
+                el.dataset.targetType = item.type;
+
+                // Sự kiện bắt đầu kéo
+                el.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData("text/plain", e.target.id);
+                    e.dataTransfer.setData("targetType", e.target.dataset.targetType);
+                    setTimeout(() => e.target.style.opacity = '0.5', 0);
+                });
+
+                // Sự kiện kết thúc kéo (dù thả đúng hay sai)
+                el.addEventListener('dragend', (e) => {
+                    e.target.style.opacity = '1';
+                });
+
+                pool.appendChild(el);
+            });
+        }
+
+        // Cho phép thả
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        // Hiệu ứng khi kéo vào vùng thả
+        function dragEnter(ev) {
+            if (ev.target.classList.contains('branch') || ev.target.closest('.branch')) {
+                let targetZone = ev.target.classList.contains('branch') ? ev.target : ev.target.closest('.branch');
+                targetZone.classList.add('hovered');
+            }
+        }
+
+        // Bỏ hiệu ứng khi kéo ra
+        function dragLeave(ev) {
+            if (ev.target.classList.contains('branch') || ev.target.closest('.branch')) {
+                let targetZone = ev.target.classList.contains('branch') ? ev.target : ev.target.closest('.branch');
+                targetZone.classList.remove('hovered');
+            }
+        }
+
+        // Xử lý khi thả
+        function drop(ev) {
+            ev.preventDefault();
+            
+            // Xác định vùng được thả vào
+            let dropZone = ev.target.classList.contains('branch') ? ev.target : ev.target.closest('.branch');
+            dropZone.classList.remove('hovered');
+
+            const itemId = ev.dataTransfer.getData("text/plain");
+            const itemType = ev.dataTransfer.getData("targetType");
+            const draggableElement = document.getElementById(itemId);
+
+            // Kiểm tra ĐÚNG hay SAI
+            if (dropZone.id === itemType) {
+                // ĐÚNG:
+                // 1. Thêm class 'correct' (chuyển màu xanh)
+                draggableElement.classList.add('correct');
+                // 2. Tắt thuộc tính draggable (khóa lại)
+                draggableElement.setAttribute('draggable', 'false');
+                // 3. Di chuyển phần tử vào vùng thả
+                dropZone.appendChild(draggableElement);
+            } else {
+                // SAI:
+                // Kích hoạt hiệu ứng nháy đỏ trên phần tử đang kéo
+                draggableElement.classList.add('shake-error');
+                
+                // Xóa class rung sau khi animation chạy xong (500ms) để có thể rung lại lần sau
+                setTimeout(() => {
+                    draggableElement.classList.remove('shake-error');
+                }, 500);
+            }
+        }
+
+        // Chạy khởi tạo
+        initGame();
+
+    </script>
+</body>
+</html>
