@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài Tập: Hình Thang Cân</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --bg-color: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        p.guide {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+
+        /* --- MINDMAP LAYOUT --- */
+        .mindmap-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            width: 100%;
+            max-width: 1100px;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .root-node {
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+            z-index: 2;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .branches {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .branch {
+            flex: 1;
+            min-width: 300px;
+            max-width: 350px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            padding: 25px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-top: 6px solid var(--accent-color);
+            transition: transform 0.3s;
+        }
+
+        .branch:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+
+        .branch-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            text-align: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            width: 100%;
+        }
+
+        /* Vùng thả (Drop Zone) */
+        .drop-zone {
+            width: 100%;
+            min-height: 70px;
+            background-color: #f1f3f5;
+            border: 2px dashed #ced4da;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #adb5bd;
+            transition: all 0.2s ease;
+        }
+
+        .drop-zone.hovered {
+            background-color: #e7f5ff;
+            border-color: var(--accent-color);
+            transform: scale(1.02);
+        }
+
+        /* Trạng thái khi đã điền đúng */
+        .drop-zone.filled {
+            border-style: solid;
+            border-color: var(--success-color);
+            background-color: #f3fdf5; /* Xanh rất nhạt */
+            color: #27ae60;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(46, 204, 113, 0.1);
+        }
+
+        /* --- DRAGGABLE ITEMS --- */
+        .answer-bank {
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 1100px;
+            min-height: 150px; /* Giữ chiều cao để tránh layout giật khi hết thẻ */
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.03);
+            border: 1px solid #eee;
+        }
+
+        .answer-bank h3 {
+            margin-top: 0;
+            color: #666;
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            font-weight: normal;
+        }
+
+        .draggables-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .draggable {
+            background-color: white;
+            border: 1px solid #dfe6e9;
+            border-left: 4px solid var(--accent-color);
+            padding: 12px 16px;
+            border-radius: 6px;
+            cursor: grab;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            font-size: 0.95rem;
+            line-height: 1.4;
+            max-width: 280px;
+            transition: transform 0.1s;
+            touch-action: none;
+        }
+
+        .draggable:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+            z-index: 1000;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }
+
+        .draggable.correct {
+            background-color: var(--success-color); /* Nền xanh khi đúng */
+            color: white;
+            border-color: var(--success-color);
+            cursor: default;
+            box-shadow: none;
+        }
+
+        .draggable.wrong {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            background-color: var(--error-color);
+            color: white;
+            border-color: var(--error-color);
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        /* Lines Connection Visualization */
+        .mindmap-container::before {
+            content: ''; position: absolute; top: 50px; left: 50%;
+            width: 2px; height: 50px; background: #dfe6e9; z-index: 0;
+        }
+        .branches::before {
+            content: ''; position: absolute; top: -10px;
+            left: 16%; right: 16%; height: 2px; background: #dfe6e9; z-index: 0;
+        }
+
+        /* Ẩn bank khi đã xong hết */
+        .answer-bank.empty {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>HÌNH THANG CÂN</h1>
+    <p class="guide">Kéo thả các mảnh ghép để hoàn thiện sơ đồ tư duy</p>
+
+    <div class="mindmap-container">
+        <div class="root-node">HÌNH THANG CÂN</div>
+        
+        <div class="branches">
+            <div class="branch" style="border-top-color: #3498db;">
+                <div class="branch-title" style="color:#3498db">1. Khái Niệm</div>
+                <div class="drop-zone" data-accept="kn1">Định nghĩa hình thang?</div>
+                <div class="drop-zone" data-accept="kn2">Định nghĩa hình thang cân?</div>
+            </div>
+
+            <div class="branch" style="border-top-color: #2ecc71;">
+                <div class="branch-title" style="color:#2ecc71">2. Tính Chất</div>
+                <div class="drop-zone" data-accept="tc1">Tính chất cạnh bên?</div>
+                <div class="drop-zone" data-accept="tc2">Tính chất đường chéo?</div>
+            </div>
+
+            <div class="branch" style="border-top-color: #e67e22;">
+                <div class="branch-title" style="color:#e67e22">3. Dấu Hiệu Nhận Biết</div>
+                <div class="drop-zone" data-accept="dh1">Dấu hiệu về góc?</div>
+                <div class="drop-zone" data-accept="dh2">Dấu hiệu về đường chéo?</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="answer-bank" id="answerBank">
+        <h3>Kho dữ liệu</h3>
+        <div class="draggables-container" id="sourceContainer">
+            <div class="draggable" data-id="kn1">Hình thang là tứ giác có hai cạnh đối song song</div>
+            <div class="draggable" data-id="kn2">Hình thang cân là hình thang có hai góc kề một đáy bằng nhau</div>
+            <div class="draggable" data-id="tc1">Trong hình thang cân, hai cạnh bên bằng nhau</div>
+            <div class="draggable" data-id="tc2">Trong hình thang cân, hai đường chéo bằng nhau</div>
+            <div class="draggable" data-id="dh1">Hình thang có hai góc kề một đáy bằng nhau là hình thang cân</div>
+            <div class="draggable" data-id="dh2">Hình thang có hai đường chéo bằng nhau là hình thang cân</div>
+        </div>
+    </div>
+
+    <script>
+        // 1. Tự động xáo trộn đáp án khi mở
+        function shuffleAnswers() {
+            const container = document.getElementById('sourceContainer');
+            for (let i = container.children.length; i >= 0; i--) {
+                container.appendChild(container.children[Math.random() * i | 0]);
+            }
+        }
+        shuffleAnswers();
+
+        // 2. Logic Kéo Thả
+        const draggables = document.querySelectorAll('.draggable');
+        const dropZones = document.querySelectorAll('.drop-zone');
+        let totalCorrect = 0;
+        const totalItems = draggables.length;
+        let initialParent;
+
+        draggables.forEach(item => {
+            item.addEventListener('mousedown', dragStart);
+            item.addEventListener('touchstart', dragStart, {passive: false});
+        });
+
+        function dragStart(e) {
+            if(this.classList.contains('correct')) return;
+            e.preventDefault();
+            
+            const item = this;
+            initialParent = item.parentElement;
+            
+            // Xử lý tọa độ chuột/touch
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            
+            const rect = item.getBoundingClientRect();
+            const offsetX = clientX - rect.left;
+            const offsetY = clientY - rect.top;
+
+            // Chuyển sang chế độ kéo
+            item.style.position = 'fixed';
+            item.style.width = rect.width + 'px';
+            item.style.zIndex = 1000;
+            item.style.left = rect.left + 'px';
+            item.style.top = rect.top + 'px';
+            
+            // Tạo placeholder giữ chỗ
+            const placeholder = document.createElement('div');
+            placeholder.className = 'placeholder';
+            placeholder.style.width = rect.width + 'px';
+            placeholder.style.height = rect.height + 'px';
+            initialParent.insertBefore(placeholder, item);
+
+            function onMouseMove(event) {
+                const cx = event.clientX || event.touches[0].clientX;
+                const cy = event.clientY || event.touches[0].clientY;
+                item.style.left = (cx - offsetX) + 'px';
+                item.style.top = (cy - offsetY) + 'px';
+                highlightDropZone(cx, cy);
+            }
+
+            function onMouseUp(event) {
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                document.removeEventListener('touchmove', onMouseMove);
+                document.removeEventListener('touchend', onMouseUp);
+
+                const cx = event.clientX || (event.changedTouches ? event.changedTouches[0].clientX : 0);
+                const cy = event.clientY || (event.changedTouches ? event.changedTouches[0].clientY : 0);
+                handleDrop(item, placeholder, cx, cy);
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+            document.addEventListener('touchmove', onMouseMove, {passive: false});
+            document.addEventListener('touchend', onMouseUp);
+        }
+
+        function highlightDropZone(x, y) {
+            const draggingItem = document.querySelector('.draggable[style*="fixed"]');
+            if(draggingItem) draggingItem.style.visibility = 'hidden';
+            const elemBelow = document.elementFromPoint(x, y);
+            if(draggingItem) draggingItem.style.visibility = 'visible';
+            if (!elemBelow) return;
+
+            const dropZone = elemBelow.closest('.drop-zone');
+            dropZones.forEach(z => z.classList.remove('hovered'));
+            if (dropZone && !dropZone.classList.contains('filled')) {
+                dropZone.classList.add('hovered');
+            }
+        }
+
+        function handleDrop(item, placeholder, x, y) {
+            item.style.visibility = 'hidden';
+            let elemBelow = document.elementFromPoint(x, y);
+            item.style.visibility = 'visible';
+            const dropZone = elemBelow ? elemBelow.closest('.drop-zone') : null;
+
+            let isCorrect = false;
+            // Kiểm tra logic đúng sai
+            if (dropZone && !dropZone.classList.contains('filled')) {
+                if (item.getAttribute('data-id') === dropZone.getAttribute('data-accept')) {
+                    isCorrect = true;
+                }
+            }
+
+            if (isCorrect) {
+                // ĐÚNG: Gắn thẻ vào ô
+                placeholder.remove();
+                item.style.position = 'static';
+                item.style.width = 'auto';
+                item.style.zIndex = 'auto';
+                item.classList.add('correct');
+                
+                dropZone.innerHTML = ''; 
+                dropZone.appendChild(item);
+                dropZone.classList.add('filled');
+                dropZone.classList.remove('hovered');
+
+                totalCorrect++;
+                
+                // Kiểm tra hoàn thành toàn bộ
+                if(totalCorrect === totalItems) {
+                    // Khi xong hết: Chỉ đơn giản là ẩn cái khung chứa thẻ bên dưới cho gọn
+                    // Không hiện thông báo gì cả.
+                    const bank = document.getElementById('answerBank');
+                    bank.style.display = 'none'; 
+                }
+
+            } else {
+                // SAI: Rung và bật về
+                item.classList.add('wrong');
+                setTimeout(() => {
+                    item.classList.remove('wrong');
+                    item.style.position = 'static';
+                    item.style.width = 'auto';
+                    item.style.zIndex = 'auto';
+                    if (placeholder.parentNode) {
+                        placeholder.parentNode.insertBefore(item, placeholder);
+                        placeholder.remove();
+                    }
+                }, 500);
+            }
+            dropZones.forEach(z => z.classList.remove('hovered'));
+        }
+    </script>
+</body>
+</html>
