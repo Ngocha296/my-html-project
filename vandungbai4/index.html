@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mô phỏng Vận dụng 2: Lưu vết đo đạc</title>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --wood-color: #8B4513;
+            --primary: #007bff;
+            --warning: #ffc107;
+        }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f4f4f9;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 { color: var(--wood-color); margin-bottom: 10px; }
+        
+        .main-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .window-area {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-right: 1px dashed #ccc;
+            padding-right: 20px;
+        }
+
+        canvas {
+            background: #fafafa;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .tools-area {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .control-panel {
+            background: #eee;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .tool-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            background: white;
+            border: 2px solid #ddd;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .tool-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .status-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid var(--warning);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.9rem;
+        }
+
+        .switch-container {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        
+        #final-result {
+            display: none;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            animation: popIn 0.5s;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Kiểm tra Cửa Sổ (Lưu vết đo)</h1>
+
+    <div class="main-container">
+        <div class="window-area">
+            <div class="switch-container">
+                <label><input type="radio" name="doorState" value="rect" checked onchange="setDoorState('rect')"> Cửa Vuông (Chuẩn)</label>
+                <label><input type="radio" name="doorState" value="skew" onchange="setDoorState('skew')"> Cửa Lệch (Hình bình hành)</label>
+            </div>
+            <canvas id="mainCanvas" width="500" height="350"></canvas>
+            <p style="font-size: 0.85rem; color: #666; margin-top:5px;">Click vào Đỉnh (đo góc) hoặc nối 2 Đỉnh (đo chéo)</p>
+        </div>
+
+        <div class="tools-area">
+            <div class="control-panel">
+                <button class="tool-btn active" id="btnEke" onclick="selectTool('eke')">📐 Dùng Êke</button>
+                <button class="tool-btn" id="btnString" onclick="selectTool('string')">🧶 Dùng Dây</button>
+                <button class="tool-btn" onclick="fullReset()" style="color: #dc3545; border-color: #dc3545;">🗑️ Xóa hết làm lại</button>
+            </div>
+
+            <div class="status-box">
+                <div id="instructionText" style="font-weight: bold; margin-bottom: 5px;">Chọn công cụ để bắt đầu.</div>
+                <div id="log"></div>
+            </div>
+            
+            <div id="final-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const logEl = document.getElementById('log');
+        const instructionEl = document.getElementById('instructionText');
+        const finalResultEl = document.getElementById('final-result');
+
+        // Dữ liệu hình học
+        const basePoints = {
+            A: { x: 100, y: 50 },
+            B: { x: 100, y: 250 },
+            C: { x: 400, y: 250 },
+            D: { x: 400, y: 50 }
+        };
+
+        let currentPoints = JSON.parse(JSON.stringify(basePoints));
+        let isSkewed = false;
+        let currentTool = 'eke'; 
+        
+        // --- QUẢN LÝ TRẠNG THÁI ĐO (ĐỂ LƯU HÌNH) ---
+        let measuredCorners = []; // Lưu các góc đã đo: ['A', 'C']
+        let measuredLines = [];   // Lưu các dây đã đo: [{p1:'A', p2:'C', dist: 360}, ...]
+        let selectedPoints = [];  // Điểm đang chọn tạm thời cho dây
+
+        // --- CẤU HÌNH & KHỞI TẠO ---
+        function setDoorState(state) {
+            isSkewed = (state === 'skew');
+            fullReset(); // Đổi trạng thái cửa thì reset đo đạc
+            
+            if (isSkewed) {
+                currentPoints.A.x = 150; currentPoints.D.x = 450; // Kéo lệch
+                currentPoints.B.x = 100; currentPoints.C.x = 400;
+            } else {
+                currentPoints = JSON.parse(JSON.stringify(basePoints));
+            }
+            drawScene();
+        }
+
+        function selectTool(tool) {
+            currentTool = tool;
+            // Xóa đo đạc của công cụ kia để đỡ rối mắt (hoặc giữ lại tùy ý, ở đây chọn xóa cho sạch)
+            if (tool === 'eke') {
+                measuredLines = []; 
+                instructionEl.textContent = "Đang dùng Êke: Click để kiểm tra góc vuông. Hình ảnh Êke sẽ được giữ lại.";
+            } else {
+                measuredCorners = [];
+                instructionEl.textContent = "Đang dùng Dây: Nối 2 điểm đối diện. Dây sẽ được giữ lại để so sánh.";
+            }
+            
+            selectedPoints = [];
+            finalResultEl.style.display = 'none';
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(tool === 'eke' ? 'btnEke' : 'btnString').classList.add('active');
+            drawScene();
+        }
+
+        function fullReset() {
+            measuredCorners = [];
+            measuredLines = [];
+            selectedPoints = [];
+            logEl.innerHTML = '';
+            finalResultEl.style.display = 'none';
+            drawScene();
+        }
+
+        // --- HÀM VẼ (RENDER) ---
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Vẽ khung cửa
+            ctx.beginPath();
+            ctx.moveTo(currentPoints.A.x, currentPoints.A.y);
+            ctx.lineTo(currentPoints.B.x, currentPoints.B.y);
+            ctx.lineTo(currentPoints.C.x, currentPoints.C.y);
+            ctx.lineTo(currentPoints.D.x, currentPoints.D.y);
+            ctx.closePath();
+            ctx.lineWidth = 10;
+            ctx.strokeStyle = '#8B4513';
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(174, 217, 224, 0.3)';
+            ctx.fill();
+
+            // 2. Vẽ song cửa
+            drawBars();
+
+            // 3. VẼ CÁC ĐO ĐẠC ĐÃ LƯU (QUAN TRỌNG)
+            
+            // Vẽ các dây đã đo
+            measuredLines.forEach(line => {
+                const p1 = currentPoints[line.p1];
+                const p2 = currentPoints[line.p2];
+                
+                // Dây
+                ctx.beginPath();
+                ctx.moveTo(p1.x, p1.y);
+                ctx.lineTo(p2.x, p2.y);
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#6f42c1'; // Tím
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Số đo
+                const midX = (p1.x + p2.x) / 2;
+                const midY = (p1.y + p2.y) / 2;
+                ctx.fillStyle = 'white';
+                ctx.fillRect(midX - 25, midY - 10, 50, 20); // Nền trắng cho chữ
+                ctx.fillStyle = '#6f42c1';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(line.dist, midX, midY + 5);
+            });
+
+            // Vẽ các Êke đã đo
+            measuredCorners.forEach(corner => {
+                drawVisualEke(corner);
+            });
+
+            // 4. Vẽ điểm góc (Hotspots)
+            ['A', 'B', 'C', 'D'].forEach(label => {
+                const p = currentPoints[label];
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = (selectedPoints.includes(label)) ? 'red' : '#333';
+                ctx.fill();
+                ctx.font = "bold 16px Arial";
+                ctx.fillStyle = "black";
+                ctx.textAlign = 'right';
+                ctx.fillText(label, p.x - 12, p.y - 12);
+            });
+        }
+
+        function drawBars() {
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#A0522D';
+            const midAB = { x: (currentPoints.A.x + currentPoints.B.x)/2, y: (currentPoints.A.y + currentPoints.B.y)/2 };
+            const midCD = { x: (currentPoints.D.x + currentPoints.C.x)/2, y: (currentPoints.D.y + currentPoints.C.y)/2 };
+            const midAD = { x: (currentPoints.A.x + currentPoints.D.x)/2, y: (currentPoints.A.y + currentPoints.D.y)/2 };
+            const midBC = { x: (currentPoints.B.x + currentPoints.C.x)/2, y: (currentPoints.B.y + currentPoints.C.y)/2 };
+            ctx.beginPath(); ctx.moveTo(midAB.x, midAB.y); ctx.lineTo(midCD.x, midCD.y); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(midAD.x, midAD.y); ctx.lineTo(midBC.x, midBC.y); ctx.stroke();
+        }
+
+        function drawVisualEke(cornerLabel) {
+            const p = currentPoints[cornerLabel];
+            const size = 50;
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            
+            // Xoay êke cho đúng góc
+            let rot = 0;
+            if (cornerLabel === 'B') rot = -90;
+            if (cornerLabel === 'C') rot = 180;
+            if (cornerLabel === 'D') rot = 90;
+            ctx.rotate(rot * Math.PI / 180);
+
+            // Vẽ tam giác
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(size, 0);
+            ctx.lineTo(0, size);
+            ctx.closePath();
+            
+            // Logic màu sắc: Nếu cửa xệ -> Êke đỏ (cảnh báo), Cửa vuông -> Êke vàng/xanh
+            // Ở đây vẽ êke chuẩn màu vàng, nếu cửa xệ thì nó sẽ bị hở ra (visual trick)
+            
+            ctx.fillStyle = 'rgba(255, 193, 7, 0.7)'; // Vàng trong suốt
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.fill();
+            ctx.stroke();
+
+            // Nếu không vuông (chế độ skew), vẽ thêm ký hiệu cảnh báo nhỏ
+            if (isSkewed) {
+                // Chỉ minh họa góc A và C nhọn, B và D tù -> đều ko khớp
+                 ctx.fillStyle = 'red';
+                 ctx.font = '20px Arial';
+                 ctx.textAlign = 'center';
+                 ctx.fillText('!', size/3, size/3);
+            }
+
+            ctx.restore();
+        }
+
+        // --- XỬ LÝ TƯƠNG TÁC ---
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Tìm điểm click
+            let clickedLabel = null;
+            for (let l in currentPoints) {
+                const p = currentPoints[l];
+                if (Math.hypot(p.x - x, p.y - y) < 25) {
+                    clickedLabel = l; break;
+                }
+            }
+            if (!clickedLabel) return;
+
+            if (currentTool === 'eke') {
+                // Thêm vào danh sách đã đo (nếu chưa có)
+                if (!measuredCorners.includes(clickedLabel)) {
+                    measuredCorners.push(clickedLabel);
+                    
+                    let msg = isSkewed ? `Góc ${clickedLabel}: KHÔNG vuông!` : `Góc ${clickedLabel}: Vuông.`;
+                    let col = isSkewed ? 'red' : 'green';
+                    log(msg, col);
+                    
+                    if (measuredCorners.length >= 3 && !isSkewed) {
+                        showResult("success", "Đã kiểm tra 3 góc vuông => HÌNH CHỮ NHẬT");
+                    } else if (isSkewed) {
+                        showResult("error", "Các góc không khớp Êke => KHÔNG PHẢI hình chữ nhật");
+                    }
+                }
+            } else {
+                // Tool Dây
+                if (selectedPoints.includes(clickedLabel)) return;
+                selectedPoints.push(clickedLabel);
+                
+                if (selectedPoints.length === 2) {
+                    // Hoàn thành 1 cặp
+                    const [p1, p2] = selectedPoints;
+                    const d1 = currentPoints[p1];
+                    const d2 = currentPoints[p2];
+                    const dist = Math.round(Math.hypot(d1.x - d2.x, d1.y - d2.y));
+                    
+                    // Lưu vào mảng
+                    measuredLines.push({ p1, p2, dist });
+                    log(`Đoạn ${p1}${p2} = ${dist}`, '#6f42c1');
+                    
+                    // Kiểm tra kết quả
+                    checkStringResult();
+                    
+                    selectedPoints = []; // Reset chọn điểm tạm thời
+                }
+            }
+            drawScene(); // Vẽ lại để cập nhật thay đổi
+        });
+
+        function checkStringResult() {
+            // Tìm xem đã đo AC và BD chưa
+            const ac = measuredLines.find(m => (m.p1+m.p2 === 'AC' || m.p1+m.p2 === 'CA'));
+            const bd = measuredLines.find(m => (m.p1+m.p2 === 'BD' || m.p1+m.p2 === 'DB'));
+
+            if (ac && bd) {
+                if (ac.dist === bd.dist) {
+                    showResult("success", `Hai đường chéo bằng nhau (${ac.dist}) => HÌNH CHỮ NHẬT`);
+                } else {
+                    showResult("error", `Hai đường chéo lệch nhau (${ac.dist} ≠ ${bd.dist}) => CỬA BỊ XỆ`);
+                }
+            }
+        }
+
+        function log(msg, color) {
+            const div = document.createElement('div');
+            div.className = 'log-item';
+            div.style.color = color;
+            div.textContent = msg;
+            logEl.prepend(div);
+        }
+
+        function showResult(type, text) {
+            finalResultEl.style.display = 'block';
+            finalResultEl.textContent = text;
+            if (type === 'success') {
+                finalResultEl.style.background = '#d4edda';
+                finalResultEl.style.color = '#155724';
+            } else {
+                finalResultEl.style.background = '#f8d7da';
+                finalResultEl.style.color = '#721c24';
+            }
+        }
+
+        // Chạy lần đầu
+        drawScene();
+    </script>
+</body>
+</html>
