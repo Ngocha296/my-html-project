@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bài Tập Tương Tác: Hình Chữ Nhật</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --success: #22c55e;
+            --error: #ef4444;
+            --bg: #f3f4f6;
+            --surface: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--surface);
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        /* KHUNG HÌNH VẼ */
+        .visual-panel {
+            flex: 1;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-right: 1px dashed #cbd5e1;
+        }
+
+        canvas {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #fff;
+        }
+
+        /* KHUNG BÀI TẬP */
+        .exercise-panel {
+            flex: 1.5;
+            min-width: 350px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: #64748b;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* PHẦN KÉO THẢ (DRAG DROP) */
+        .proof-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            background: #f8fafc;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .statement {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .drop-zone {
+            width: 180px;
+            height: 40px;
+            border: 2px dashed #94a3b8;
+            border-radius: 6px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            color: #64748b;
+            text-align: center;
+            padding: 0 5px;
+        }
+
+        .drop-zone.hover {
+            background-color: #dbeafe;
+            border-color: var(--primary);
+        }
+
+        .drop-zone.correct {
+            background-color: #dcfce7;
+            border-color: var(--success);
+            color: var(--success);
+            border-style: solid;
+        }
+
+        .drop-zone.incorrect {
+            animation: shake 0.4s;
+            border-color: var(--error);
+            background-color: #fee2e2;
+        }
+
+        .draggable-container {
+            margin-top: 20px;
+            padding: 15px;
+            background: #eef2ff;
+            border-radius: 8px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .draggable {
+            background: white;
+            padding: 8px 15px;
+            border: 1px solid #c7d2fe;
+            border-radius: 6px;
+            cursor: grab;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-size: 0.9rem;
+        }
+
+        .draggable:active {
+            cursor: grabbing;
+        }
+
+        /* PHẦN ĐIỀN TỪ (FILL IN BLANK) */
+        .fill-text {
+            line-height: 2.2;
+            font-size: 1.05rem;
+        }
+
+        .input-blank {
+            border: none;
+            border-bottom: 2px solid #94a3b8;
+            width: 80px;
+            text-align: center;
+            font-size: 1rem;
+            color: var(--primary);
+            font-weight: bold;
+            background: transparent;
+            transition: 0.3s;
+        }
+
+        .input-blank:focus {
+            outline: none;
+            border-bottom-color: var(--primary);
+        }
+
+        .input-blank.correct {
+            border-bottom-color: var(--success);
+            color: var(--success);
+        }
+
+        .input-blank.incorrect {
+            border-bottom-color: var(--error);
+            color: var(--error);
+        }
+
+        .btn-check {
+            margin-top: 20px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: block;
+            width: 100%;
+        }
+
+        .btn-check:hover {
+            background-color: #4338ca;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h2>Bài Tập Tương Tác: Hình Chữ Nhật ABCD</h2>
+        <p style="margin:0; opacity: 0.9">Kéo thả và điền từ để hoàn thành bài chứng minh</p>
+    </header>
+
+    <div class="main-content">
+        <div class="visual-panel">
+            <canvas id="geoCanvas" width="300" height="200"></canvas>
+            <p style="font-size: 0.9rem; color: #64748b; text-align: center">
+                <em>Hình 2: ABCD là hình chữ nhật</em>
+            </p>
+        </div>
+
+        <div class="exercise-panel">
+            <div class="tabs">
+                <button class="tab-btn active" onclick="openTab('tab1')">a) Chứng minh Song Song</button>
+                <button class="tab-btn" onclick="openTab('tab2')">b) So sánh Tam giác</button>
+            </div>
+
+            <div id="tab1" class="tab-content active">
+                <p><strong>Nhiệm vụ:</strong> Kéo các lý do màu trắng vào ô trống thích hợp để hoàn thành chứng minh <strong>AB // CD</strong>.</p>
+                
+                <div class="proof-chain">
+                    <div class="proof-step">
+                        <div class="statement">1. AB ⊥ AD và CD ⊥ AD</div>
+                        <div class="drop-zone" data-answer="gt"></div>
+                    </div>
+                    <div class="proof-step">
+                        <div class="statement">2. Suy ra AB // CD</div>
+                        <div class="drop-zone" data-answer="vuong-goc"></div>
+                    </div>
+                    <div class="proof-step">
+                        <div class="statement">3. Chứng minh tương tự: AD // BC</div>
+                        <div class="drop-zone" data-answer="tuong-tu"></div>
+                    </div>
+                </div>
+
+                <div class="draggable-container">
+                    <div class="draggable" draggable="true" id="d1" data-id="vuong-goc">Quan hệ từ vuông góc đến song song</div>
+                    <div class="draggable" draggable="true" id="d2" data-id="gt">Tính chất hình chữ nhật (gt)</div>
+                    <div class="draggable" draggable="true" id="d3" data-id="tuong-tu">Cùng vuông góc với AB</div>
+                </div>
+                <p id="feedback-drag" style="text-align: center; font-weight: bold; height: 20px;"></p>
+            </div>
+
+            <div id="tab2" class="tab-content">
+                <p><strong>Nhiệm vụ:</strong> Điền vào chỗ trống để chứng minh <strong>∆ABD = ∆BAC</strong>.</p>
+                
+                <div class="fill-text">
+                    Xét ∆ABD và ∆BAC có:<br>
+                    1. Cạnh <input type="text" class="input-blank" data-ans="AB" placeholder="..."> chung.<br>
+                    2. Cạnh AD = <input type="text" class="input-blank" data-ans="BC" placeholder="..."> (Hai cạnh đối HCN).<br>
+                    3. Góc ∠DAB = Góc <input type="text" class="input-blank" data-ans="CBA" placeholder="..."> = 90°.<br>
+                    <br>
+                    ⇒ ∆ABD = ∆BAC theo trường hợp: 
+                    <select class="input-blank" id="final-case" style="width: 120px;">
+                        <option value="">Chọn...</option>
+                        <option value="ccc">c.c.c</option>
+                        <option value="cgc">c.g.c</option>
+                        <option value="gcg">g.c.g</option>
+                    </select>
+                </div>
+
+                <button class="btn-check" onclick="checkFillInBlank()">Kiểm tra kết quả</button>
+                <p id="feedback-fill" style="text-align: center; font-weight: bold; margin-top: 10px;"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- PHẦN VẼ HÌNH (CANVAS) ---
+    const canvas = document.getElementById('geoCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    function drawRect() {
+        ctx.clearRect(0,0,canvas.width, canvas.height);
+        
+        const x = 50, y = 50, w = 200, h = 100;
+        
+        // Vẽ hình chữ nhật
+        ctx.beginPath();
+        ctx.rect(x, y, w, h);
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#334155';
+        ctx.stroke();
+
+        // Vẽ đường chéo
+        ctx.beginPath();
+        ctx.moveTo(x, y); ctx.lineTo(x+w, y+h);
+        ctx.moveTo(x+w, y); ctx.lineTo(x, y+h);
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Ký hiệu góc vuông
+        drawRightAngle(x, y); // A
+        drawRightAngle(x+w, y); // B
+        drawRightAngle(x+w, y+h); // C
+        drawRightAngle(x, y+h); // D
+
+        // Điểm và Nhãn
+        ctx.font = 'bold 16px Arial';
+        ctx.fillStyle = '#1e293b';
+        ctx.fillText('A', x-15, y-5);
+        ctx.fillText('B', x+w+5, y-5);
+        ctx.fillText('C', x+w+5, y+h+15);
+        ctx.fillText('D', x-15, y+h+15);
+    }
+
+    function drawRightAngle(x, y) {
+        const size = 10;
+        ctx.beginPath();
+        // Vẽ góc vuông (ký hiệu màu đỏ)
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.5;
+        
+        // Góc A (Top Left)
+        if(x < 100 && y < 100) { ctx.moveTo(x+size, y); ctx.lineTo(x+size, y+size); ctx.lineTo(x, y+size); }
+        // Góc B (Top Right)
+        else if(x > 100 && y < 100) { ctx.moveTo(x-size, y); ctx.lineTo(x-size, y+size); ctx.lineTo(x, y+size); }
+        // Góc C (Bot Right)
+        else if(x > 100 && y > 100) { ctx.moveTo(x-size, y); ctx.lineTo(x-size, y-size); ctx.lineTo(x, y-size); }
+        // Góc D (Bot Left)
+        else { ctx.moveTo(x+size, y); ctx.lineTo(x+size, y-size); ctx.lineTo(x, y-size); }
+        
+        ctx.stroke();
+    }
+    drawRect();
+
+    // --- PHẦN LOGIC TAB ---
+    function openTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    // --- PHẦN KÉO THẢ (DRAG & DROP) ---
+    const draggables = document.querySelectorAll('.draggable');
+    const dropZones = document.querySelectorAll('.drop-zone');
+    let draggedItem = null;
+
+    draggables.forEach(draggable => {
+        draggable.addEventListener('dragstart', () => {
+            draggedItem = draggable;
+            draggable.classList.add('dragging');
+        });
+        draggable.addEventListener('dragend', () => {
+            draggable.classList.remove('dragging');
+            draggedItem = null;
+        });
+    });
+
+    dropZones.forEach(zone => {
+        zone.addEventListener('dragover', e => {
+            e.preventDefault();
+            if(!zone.hasChildNodes()) {
+                zone.classList.add('hover');
+            }
+        });
+
+        zone.addEventListener('dragleave', () => {
+            zone.classList.remove('hover');
+        });
+
+        zone.addEventListener('drop', () => {
+            zone.classList.remove('hover');
+            if (draggedItem) {
+                const correctAnswer = zone.getAttribute('data-answer');
+                const droppedAnswer = draggedItem.getAttribute('data-id');
+
+                if (correctAnswer === droppedAnswer) {
+                    // Đúng
+                    zone.appendChild(draggedItem);
+                    zone.classList.add('correct');
+                    draggedItem.setAttribute('draggable', 'false');
+                    draggedItem.style.border = 'none';
+                    draggedItem.style.background = 'transparent';
+                    checkDragComplete();
+                } else {
+                    // Sai
+                    zone.classList.add('incorrect');
+                    document.getElementById('feedback-drag').innerText = "Sai rồi! Hãy thử lại.";
+                    document.getElementById('feedback-drag').style.color = "red";
+                    setTimeout(() => zone.classList.remove('incorrect'), 500);
+                }
+            }
+        });
+    });
+
+    function checkDragComplete() {
+        const filled = document.querySelectorAll('.drop-zone.correct').length;
+        if (filled === 3) {
+            document.getElementById('feedback-drag').innerText = "Tuyệt vời! Bạn đã chứng minh xong câu a.";
+            document.getElementById('feedback-drag').style.color = "green";
+        } else {
+            document.getElementById('feedback-drag').innerText = "";
+        }
+    }
+
+    // --- PHẦN ĐIỀN TỪ (FILL IN BLANK) ---
+    function checkFillInBlank() {
+        const inputs = document.querySelectorAll('.input-blank[type="text"]');
+        let allCorrect = true;
+
+        inputs.forEach(input => {
+            // Chấp nhận viết hoa thường
+            const val = input.value.trim().toUpperCase();
+            const ans = input.getAttribute('data-ans').toUpperCase();
+            
+            if (val === ans) {
+                input.classList.add('correct');
+                input.classList.remove('incorrect');
+            } else {
+                input.classList.add('incorrect');
+                input.classList.remove('correct');
+                allCorrect = false;
+            }
+        });
+
+        // Check dropdown select
+        const select = document.getElementById('final-case');
+        if (select.value === 'cgc') {
+            select.classList.add('correct');
+            select.classList.remove('incorrect');
+        } else {
+            select.classList.add('incorrect');
+            select.classList.remove('correct');
+            allCorrect = false;
+        }
+
+        const fb = document.getElementById('feedback-fill');
+        if (allCorrect) {
+            fb.innerText = "Chính xác! Hai tam giác bằng nhau theo trường hợp Cạnh-Góc-Cạnh.";
+            fb.style.color = "green";
+        } else {
+            fb.innerText = "Vẫn còn chỗ chưa đúng, hãy kiểm tra các ô màu đỏ nhé.";
+            fb.style.color = "red";
+        }
+    }
+</script>
+
+</body>
+</html>
