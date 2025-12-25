@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Hình Học: Đi Tìm Hình Chữ Nhật</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #06d6a0;
+            --danger: #ef476f;
+            --warning: #ffd166;
+            --bg: #f8f9fa;
+            --text: #2b2d42;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            padding-bottom: 180px; /* Tạo khoảng trống dưới cùng để panel không che nội dung khi cuộn */
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 30px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 15px 20px;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        }
+
+        .header-title h1 { margin: 0; font-size: 1.3rem; font-weight: 800; }
+        .header-title p { margin: 2px 0 0; opacity: 0.9; font-size: 0.85rem; }
+        
+        .score-board {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        /* TOOLBAR */
+        .toolbar {
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tool-btn {
+            background: white;
+            border: 2px solid #e9ecef;
+            padding: 8px 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 700;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        .tool-btn.active {
+            background: var(--warning);
+            color: var(--text);
+            border-color: var(--warning);
+            box-shadow: 0 4px 10px rgba(255, 209, 102, 0.4);
+        }
+
+        /* STAGE */
+        .stage {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 20px;
+        }
+
+        .instruction-banner {
+            background: #e7f5ff;
+            color: #004085;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-left: 4px solid var(--primary);
+            font-size: 0.95rem;
+            max-width: 600px;
+        }
+
+        .shape-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Tự động xuống dòng nếu màn hình nhỏ */
+            gap: 30px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .shape-card {
+            background: white;
+            border-radius: 16px;
+            border: 2px solid #f1f3f5;
+            padding: 10px;
+            position: relative;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        }
+
+        .shape-card.focused {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
+            transform: translateY(-5px);
+            z-index: 10; /* Nổi lên trên */
+        }
+
+        svg { width: 100%; height: 200px; overflow: visible; user-select: none; }
+
+        /* SVG Text Styling Fixes */
+        .vertex-label {
+            font-size: 16px;
+            font-weight: 800;
+            fill: #2b2d42;
+        }
+        
+        .angle-value {
+            font-size: 14px;
+            font-weight: bold;
+            fill: #495057;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none; /* Không chặn click */
+        }
+
+        .corner-hotspot {
+            fill: transparent;
+            cursor: crosshair;
+            stroke: transparent;
+            stroke-width: 20; /* Vùng bấm rộng hơn */
+        }
+        
+        .corner-hotspot:hover { stroke: rgba(255, 209, 102, 0.3); }
+
+        .angle-arc {
+            fill: none;
+            stroke: var(--danger);
+            stroke-width: 2;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .corner-revealed .angle-value, 
+        .corner-revealed .angle-arc { opacity: 1; }
+
+        /* DECISION PANEL - FIXED BOTTOM */
+        .decision-panel {
+            position: fixed; /* Cố định vào cửa sổ trình duyệt */
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px); /* Hiệu ứng kính mờ */
+            
+            padding: 20px 25px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            border: 1px solid rgba(0,0,0,0.1);
+            
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            display: none;
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000; /* Luôn nằm trên cùng */
+        }
+
+        .decision-panel h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: var(--primary); }
+
+        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 15px; }
+
+        .btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn:active { transform: scale(0.95); }
+        .btn-yes { background: var(--success); color: white; }
+        .btn-no { background: var(--danger); color: white; }
+        .btn-next { background: var(--primary); color: white; margin-top: 10px; width: 100%; }
+
+        .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: none;
+            z-index: 5;
+        }
+
+        @keyframes slideUp { from { transform: translate(-50%, 100%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+
+        body.measuring {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="%23000" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 12V2"/><path d="M12 12L19 19"/></svg>') 16 16, crosshair;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <div class="header-title">
+            <h1><i class="fas fa-shapes"></i> Lab Hình Học</h1>
+            <p>Bài 5: Hình chữ nhật - Lớp 8</p>
+        </div>
+        <div class="score-board">
+            <i class="fas fa-star" style="color: var(--warning)"></i>
+            <span id="score">0/2</span> câu
+        </div>
+    </header>
+
+    <div class="toolbar">
+        <button class="tool-btn active" id="tool-measure" onclick="toggleTool('measure')">
+            <i class="fas fa-drafting-compass"></i> Thước đo góc
+        </button>
+        <div style="font-size: 0.85rem; color: #888; display: flex; align-items: center;">
+            <i class="fas fa-info-circle" style="margin-right: 5px;"></i> Bấm vào đỉnh để đo
+        </div>
+    </div>
+
+    <div class="stage">
+        <div class="instruction-banner" id="instruction">
+            Hãy dùng thước đo góc kiểm tra 4 đỉnh của các hình bên dưới!
+        </div>
+
+        <div class="shape-wrapper">
+            <div class="shape-card" id="card-a">
+                <div class="status-badge" id="badge-a"></div>
+                <svg viewBox="0 0 200 160">
+                    <rect x="40" y="40" width="120" height="80" fill="#f8f9fa" stroke="#2b2d42" stroke-width="2"/>
+                    
+                    <g class="corner-group" id="corner-a-m" onclick="measureCorner(this, 90)">
+                        <circle cx="40" cy="40" r="15" class="corner-hotspot" />
+                        <path d="M40 50 L50 50 L50 40" stroke="black" fill="none" class="angle-arc" />
+                        <text x="25" y="30" class="vertex-label" text-anchor="end">M</text>
+                        <text x="55" y="65" class="angle-value" text-anchor="middle">90°</text>
+                    </g>
+                    
+                    <g class="corner-group" id="corner-a-n" onclick="measureCorner(this, 90)">
+                        <circle cx="160" cy="40" r="15" class="corner-hotspot" />
+                        <path d="M150 40 L150 50 L160 50" stroke="black" fill="none" class="angle-arc" />
+                        <text x="175" y="30" class="vertex-label" text-anchor="start">N</text>
+                        <text x="145" y="65" class="angle-value" text-anchor="middle">90°</text>
+                    </g>
+                    
+                    <g class="corner-group" id="corner-a-q" onclick="measureCorner(this, 90)">
+                        <circle cx="40" cy="120" r="15" class="corner-hotspot" />
+                        <path d="M40 110 L50 110 L50 120" stroke="black" fill="none" class="angle-arc" />
+                        <text x="25" y="145" class="vertex-label" text-anchor="end">Q</text>
+                        <text x="55" y="105" class="angle-value" text-anchor="middle">90°</text>
+                    </g>
+                    
+                    <g class="corner-group" id="corner-a-p" onclick="measureCorner(this, 90)">
+                        <circle cx="160" cy="120" r="15" class="corner-hotspot" />
+                        <path d="M150 120 L150 110 L160 110" stroke="black" fill="none" class="angle-arc" />
+                        <text x="175" y="145" class="vertex-label" text-anchor="start">P</text>
+                        <text x="145" y="105" class="angle-value" text-anchor="middle">90°</text>
+                    </g>
+
+                    <text x="100" y="155" text-anchor="middle" font-size="14" fill="#666">Hình a</text>
+                </svg>
+            </div>
+
+            <div class="shape-card" id="card-b">
+                <div class="status-badge" id="badge-b"></div>
+                <svg viewBox="0 0 200 160">
+                    <polygon points="40,40 160,40 145,120 40,120" fill="#f8f9fa" stroke="#2b2d42" stroke-width="2"/>
+
+                    <g class="corner-group" id="corner-b-g" onclick="measureCorner(this, 90)">
+                        <circle cx="40" cy="40" r="15" class="corner-hotspot" />
+                        <path d="M40 50 L50 50 L50 40" stroke="black" fill="none" class="angle-arc" />
+                        <text x="25" y="30" class="vertex-label" text-anchor="end">G</text>
+                        <text x="55" y="65" class="angle-value" text-anchor="middle">90°</text>
+                    </g>
+                    
+                    <g class="corner-group" id="corner-b-h" onclick="measureCorner(this, 102)">
+                        <circle cx="160" cy="40" r="15" class="corner-hotspot" />
+                        <path d="M148 40 A 15 15 0 0 1 156 52" stroke="red" fill="none" class="angle-arc" />
+                        <text x="175" y="30" class="vertex-label" text-anchor="start">H</text>
+                        <text x="135" y="70" class="angle-value" fill="red" font-weight="800" text-anchor="middle">102°</text>
+                    </g>
+                    
+                    <g class="corner-group" id="corner-b-k" onclick="measureCorner(this, 90)">
+                        <circle cx="40" cy="120" r="15" class="corner-hotspot" />
+                        <path d="M40 110 L50 110 L50 120" stroke="black" fill="none" class="angle-arc" />
+                        <text x="25" y="145" class="vertex-label" text-anchor="end">K</text>
+                        <text x="55" y="105" class="angle-value" text-anchor="middle">90°</text>
+                    </g>
+                    
+                     <g class="corner-group" id="corner-b-i" onclick="measureCorner(this, 78)">
+                        <circle cx="145" cy="120" r="15" class="corner-hotspot" />
+                        <path d="M135 118 A 15 15 0 0 1 143 110" stroke="black" fill="none" class="angle-arc" />
+                        <text x="160" y="145" class="vertex-label" text-anchor="start">I</text>
+                        <text x="125" y="105" class="angle-value" text-anchor="middle">78°</text>
+                    </g>
+
+                    <text x="100" y="155" text-anchor="middle" font-size="14" fill="#666">Hình b</text>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="decision-panel" id="decision-panel">
+    <h3 id="question-text">Tứ giác này có phải Hình chữ nhật không?</h3>
+    <p id="evidence-text" style="color: #666; font-size: 0.9rem; margin: 5px 0 10px 0;"></p>
+    
+    <div class="btn-group" id="btn-group-action">
+        <button class="btn btn-yes" onclick="submitAnswer(true)">
+            <i class="fas fa-check"></i> ĐÚNG
+        </button>
+        <button class="btn btn-no" onclick="submitAnswer(false)">
+            <i class="fas fa-times"></i> SAI
+        </button>
+    </div>
+    
+    <div id="explanation" style="display:none; margin-top:15px; text-align: left; background: #f1f3f5; padding: 12px; border-radius: 8px; font-size: 0.95rem;"></div>
+    
+    <button class="btn btn-next" id="btn-next" style="display:none;" onclick="nextStep()">
+        Tiếp tục <i class="fas fa-arrow-right"></i>
+    </button>
+</div>
+
+<script>
+    // State Management
+    const state = {
+        currentShape: null, 
+        measuredCounts: { a: 0, b: 0 },
+        isCompleted: { a: false, b: false },
+        score: 0
+    };
+
+    function toggleTool(tool) {
+        document.body.classList.add('measuring');
+    }
+
+    function measureCorner(element, angle) {
+        if (element.classList.contains('corner-revealed')) return;
+        
+        element.classList.add('corner-revealed');
+        if(navigator.vibrate) navigator.vibrate(20);
+
+        const shapeId = element.id.includes('corner-a') ? 'a' : 'b';
+        state.measuredCounts[shapeId]++;
+
+        // Nếu người dùng bắt đầu đo hình mới trong khi hình cũ chưa xong nhưng chưa có panel
+        if (!state.isCompleted[shapeId]) {
+            state.currentShape = shapeId;
+            showDecisionPanel(shapeId);
+        }
+        updateEvidence(shapeId);
+    }
+
+    function showDecisionPanel(shapeId) {
+        const panel = document.getElementById('decision-panel');
+        const shapeName = shapeId === 'a' ? "MNPQ" : "GHIK";
+        
+        // Highlight shape
+        document.querySelectorAll('.shape-card').forEach(c => c.classList.remove('focused'));
+        document.getElementById(`card-${shapeId}`).classList.add('focused');
+
+        document.getElementById('question-text').innerText = `Tứ giác ${shapeName} có phải hình chữ nhật không?`;
+        panel.style.display = 'block';
+        
+        // Reset panel state for new question
+        document.getElementById('explanation').style.display = 'none';
+        document.getElementById('btn-group-action').style.display = 'flex';
+        document.getElementById('btn-next').style.display = 'none';
+        
+        updateEvidence(shapeId);
+    }
+
+    function updateEvidence(shapeId) {
+        const evidenceEl = document.getElementById('evidence-text');
+        const count = state.measuredCounts[shapeId];
+        evidenceEl.innerHTML = `<i class="fas fa-search"></i> Đã đo ${count}/4 góc.`;
+    }
+
+    function submitAnswer(isYes) {
+        const shapeId = state.currentShape;
+        const explanationEl = document.getElementById('explanation');
+        const btnGroup = document.getElementById('btn-group-action');
+        const nextBtn = document.getElementById('btn-next');
+        const badge = document.getElementById(`badge-${shapeId}`);
+
+        let isCorrect = false;
+        let explanationHTML = "";
+
+        if (shapeId === 'a') {
+            if (isYes) {
+                isCorrect = true;
+                explanationHTML = `<span style="color:var(--success); font-weight:bold"><i class="fas fa-check-circle"></i> Chính xác!</span><br>Tứ giác MNPQ có 4 góc vuông (90°) nên là hình chữ nhật.`;
+            } else {
+                explanationHTML = `<span style="color:var(--danger); font-weight:bold"><i class="fas fa-times-circle"></i> Sai rồi.</span><br>Hãy nhìn kỹ, cả 4 góc của MNPQ đều bằng 90°.`;
+            }
+        } else {
+            if (!isYes) {
+                isCorrect = true;
+                explanationHTML = `<span style="color:var(--success); font-weight:bold"><i class="fas fa-check-circle"></i> Chính xác!</span><br>Tứ giác GHIK có góc H = 102° (không vuông), nên không phải hình chữ nhật.`;
+            } else {
+                explanationHTML = `<span style="color:var(--danger); font-weight:bold"><i class="fas fa-times-circle"></i> Sai rồi.</span><br>Góc H = 102° > 90°, nên không thể là hình chữ nhật.`;
+            }
+        }
+
+        explanationEl.style.display = 'block';
+        explanationEl.innerHTML = explanationHTML;
+        btnGroup.style.display = 'none';
+        nextBtn.style.display = 'block';
+
+        if (isCorrect) {
+            if(!state.isCompleted[shapeId]) { // Chỉ cộng điểm lần đầu
+                state.score++;
+                document.getElementById('score').innerText = `${state.score}/2`;
+            }
+            badge.style.display = 'block';
+            badge.style.background = 'var(--success)';
+            badge.style.color = 'white';
+            badge.innerText = "HOÀN THÀNH";
+            state.isCompleted[shapeId] = true;
+            
+            // Tự động hiện hết các góc
+            document.querySelectorAll(`[id^='corner-${shapeId}']`).forEach(el => el.classList.add('corner-revealed'));
+        } else {
+            badge.style.display = 'block';
+            badge.style.background = 'var(--warning)';
+            badge.style.color = '#333';
+            badge.innerText = "LÀM LẠI";
+        }
+    }
+
+    function nextStep() {
+        const panel = document.getElementById('decision-panel');
+        // Không ẩn panel hoàn toàn mà chỉ ẩn nội dung hoặc reset
+        panel.style.display = 'none';
+        
+        document.getElementById(`card-${state.currentShape}`).classList.remove('focused');
+        state.currentShape = null;
+
+        if (state.isCompleted.a && state.isCompleted.b) {
+            document.getElementById('instruction').innerHTML = `🎉 <strong>Xuất sắc!</strong> Bạn đã hoàn thành bài thực hành.`;
+            document.getElementById('instruction').style.background = "#d4edda";
+            document.getElementById('instruction').style.color = "#155724";
+        } else {
+             document.getElementById('instruction').innerText = "Tiếp tục với hình còn lại nào!";
+        }
+    }
+
+    toggleTool('measure');
+</script>
+
+</body>
+</html>
