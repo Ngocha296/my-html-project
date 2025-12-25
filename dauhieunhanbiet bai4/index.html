@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tương tác Toán 8: Từ Hình Bình Hành đến Hình Chữ Nhật</title>
+    
+    <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']]
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --bg-color: #f0f8ff;
+            --correct-color: #28a745;
+            --text-color: #333;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 25px;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            max-width: 1100px;
+            width: 100%;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Khu vực mô phỏng hình học */
+        .visual-panel {
+            flex: 1;
+            min-width: 320px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-right: 1px dashed #ccc;
+            padding-right: 20px;
+        }
+
+        canvas {
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background: #fff;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .controls {
+            width: 100%;
+            text-align: center;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        input[type=range] {
+            width: 100%;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .status-display {
+            margin-top: 5px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #d63384;
+            min-height: 1.5em;
+        }
+
+        /* Khu vực bài tập kéo thả */
+        .exercise-panel {
+            flex: 1.5;
+            min-width: 350px;
+        }
+
+        .question-box {
+            background: #eef6ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            border-left: 6px solid var(--primary-color);
+            position: relative;
+            transition: opacity 0.3s;
+        }
+
+        .drop-zone {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 50px;
+            height: 30px;
+            border-bottom: 2px dashed #999;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin: 0 5px;
+            vertical-align: middle;
+            background: rgba(255,255,255,0.5);
+            border-radius: 4px;
+        }
+
+        .drop-zone.filled {
+            border-bottom: 2px solid var(--correct-color);
+            color: var(--correct-color);
+            background: #e8f5e9;
+        }
+
+        .options-container {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding: 15px;
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            min-height: 60px;
+            align-items: center;
+        }
+
+        .draggable {
+            background: var(--primary-color);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: grab;
+            user-select: none;
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+
+        .draggable:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        .draggable.disabled {
+            background: #adb5bd;
+            cursor: default;
+            pointer-events: none;
+            box-shadow: none;
+        }
+
+        /* Kết luận cuối cùng */
+        #final-conclusion {
+            width: 100%;
+            margin-top: 10px;
+            padding: 25px;
+            background: #fff3cd;
+            border: 2px solid #ffecb5;
+            border-radius: 12px;
+            text-align: center;
+            display: none;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .bulb-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .container {
+                flex-direction: column;
+            }
+            .visual-panel {
+                border-right: none;
+                border-bottom: 1px dashed #ccc;
+                padding-bottom: 25px;
+                padding-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Bài 3: Từ Hình Bình Hành đến Hình Chữ Nhật</h1>
+
+    <div class="container">
+        <div class="visual-panel">
+            <canvas id="geoCanvas" width="340" height="260"></canvas>
+            <div class="controls">
+                <label><strong>Kéo để chỉnh góc $\widehat{BAD}$:</strong></label><br>
+                <input type="range" id="skewSlider" min="0" max="60" value="40">
+                <div class="status-display" id="geometryStatus">Hình Bình Hành</div>
+                <div style="font-size: 0.9rem; color: #666; margin-top:8px;">
+                    Góc A = <span id="angleValue">50</span>$^\circ$ &nbsp;|&nbsp; $AC$ <span id="eqSign">\(\neq\)</span> $BD$
+                </div>
+            </div>
+        </div>
+
+        <div class="exercise-panel">
+            <p><strong>Nhiệm vụ:</strong> Kéo các thẻ số/chữ bên dưới vào chỗ trống thích hợp.</p>
+
+            <div class="question-box" id="q1-box">
+                <strong>a) Nếu $\widehat{BAD} = 90^\circ$ thì $ABCD$ là hình gì?</strong><br><br>
+                <div style="line-height: 1.8;">
+                Vì $ABCD$ là hình bình hành nên $AB \parallel CD$. <br>
+                $\Rightarrow \widehat{BAD} + \widehat{ADC} = $ <span class="drop-zone" data-ans="180"></span>$^\circ$ (hai góc trong cùng phía).<br>
+                Nếu $\widehat{BAD} = 90^\circ$ thì $\widehat{ADC} = $ <span class="drop-zone" data-ans="90"></span>$^\circ$.<br>
+                Các góc đối bằng nhau nên tất cả các góc đều là góc vuông.
+                </div>
+                <div class="options-container" id="options-1"></div>
+            </div>
+
+            <div class="question-box" id="q2-box" style="opacity: 0.4; pointer-events: none; filter: grayscale(100%);">
+                <strong>b) Nếu $AC = BD$ thì góc $A$ có vuông không?</strong><br><br>
+                <div style="line-height: 1.8;">
+                Xét $\Delta ABC$ và $\Delta BAD$ có: $AB$ chung, $BC = AD$, $AC = BD$.<br>
+                $\Rightarrow \Delta ABC = \Delta BAD$ (c.c.c) nên $\widehat{ABC} = \widehat{...}$ <span class="drop-zone" data-ans="BAD"></span>.<br>
+                Mà $\widehat{ABC} + \widehat{BAD} = 180^\circ$ (trong cùng phía), nên mỗi góc bằng <span class="drop-zone" data-ans="90"></span>$^\circ$.
+                </div>
+                <div class="options-container" id="options-2"></div>
+            </div>
+        </div>
+
+        <div id="final-conclusion">
+            <span class="bulb-icon">💡</span>
+            <h3 style="color: #856404; margin-top:0;">Dấu hiệu nhận biết</h3>
+            <p style="font-size: 1.1rem;">1. Hình bình hành có một góc vuông là <strong>HÌNH CHỮ NHẬT</strong>.</p>
+            <p style="font-size: 1.1rem;">2. Hình bình hành có hai đường chéo bằng nhau là <strong>HÌNH CHỮ NHẬT</strong>.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- PHẦN 1: MÔ PHỎNG CANVAS ---
+        const canvas = document.getElementById('geoCanvas');
+        const ctx = canvas.getContext('2d');
+        const slider = document.getElementById('skewSlider');
+        const angleDisplay = document.getElementById('angleValue');
+        const eqSign = document.getElementById('eqSign');
+        const statusDisplay = document.getElementById('geometryStatus');
+
+        function drawParallelogram(skew) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+            const width = 160;
+            const height = 110;
+            
+            const xOffset = (skew / 60) * 60; 
+            
+            const Ax = cx - width/2 + xOffset; 
+            const Ay = cy - height/2;
+            const Bx = cx - width/2 - xOffset;
+            const By = cy + height/2;
+            const Cx = cx + width/2 - xOffset;
+            const Cy = cy + height/2;
+            const Dx = cx + width/2 + xOffset;
+            const Dy = cy - height/2;
+
+            // Vẽ hình
+            ctx.beginPath();
+            ctx.moveTo(Ax, Ay); ctx.lineTo(Bx, By); ctx.lineTo(Cx, Cy); ctx.lineTo(Dx, Dy);
+            ctx.closePath();
+            ctx.strokeStyle = '#007bff'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.fillStyle = 'rgba(0, 123, 255, 0.08)'; ctx.fill();
+
+            // Vẽ đường chéo
+            ctx.beginPath();
+            ctx.moveTo(Ax, Ay); ctx.lineTo(Cx, Cy); // AC
+            ctx.moveTo(Bx, By); ctx.lineTo(Dx, Dy); // BD
+            ctx.strokeStyle = '#999'; ctx.lineWidth = 1; ctx.setLineDash([5, 5]); ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Điểm O
+            ctx.beginPath(); ctx.arc(cx, cy, 3, 0, 2 * Math.PI); ctx.fillStyle = 'red'; ctx.fill();
+
+            // Label
+            ctx.font = 'bold 16px Arial'; ctx.fillStyle = '#333';
+            ctx.fillText('A', Ax - 20, Ay); ctx.fillText('B', Bx - 20, By + 20);
+            ctx.fillText('C', Cx + 10, Cy + 20); ctx.fillText('D', Dx + 10, Dy);
+            ctx.font = '14px Arial'; ctx.fillText('O', cx, cy - 10);
+            
+            // Xử lý logic hiển thị
+            if (skew < 5) {
+                // Vẽ ký hiệu vuông
+                ctx.strokeStyle = 'red'; ctx.lineWidth = 2;
+                ctx.strokeRect(Bx + 6, By - 16, 12, 12); 
+                
+                statusDisplay.textContent = "HÌNH CHỮ NHẬT";
+                statusDisplay.style.color = "#28a745";
+                
+                // Cập nhật text trong HTML (cần MathJax render lại nếu thay đổi động, nhưng ở đây ta dùng text thường cho nhanh)
+                eqSign.textContent = "="; // Dùng text thường vì MathJax đã render xong
+                angleDisplay.textContent = "90";
+            } else {
+                statusDisplay.textContent = "Hình Bình Hành";
+                statusDisplay.style.color = "#d63384";
+                eqSign.textContent = "≠"; 
+                const angle = 90 - (skew/60)*40;
+                angleDisplay.textContent = Math.round(angle);
+            }
+        }
+
+        slider.addEventListener('input', (e) => {
+            drawParallelogram(e.target.value);
+        });
+        drawParallelogram(40); // Vẽ lần đầu
+
+        // --- PHẦN 2: LOGIC KÉO THẢ ---
+        const dataSet1 = [
+            { id: 'opt1-1', text: '180', val: '180' },
+            { id: 'opt1-2', text: '90', val: '90' },
+            { id: 'opt1-3', text: '60', val: '60' }, 
+            { id: 'opt1-4', text: '360', val: '360' } 
+        ];
+
+        const dataSet2 = [
+            { id: 'opt2-1', text: 'BAD', val: 'BAD' }, 
+            { id: 'opt2-2', text: '90', val: '90' },
+            { id: 'opt2-3', text: 'ADC', val: 'ADC' }, 
+            { id: 'opt2-4', text: '45', val: '45' } 
+        ];
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function initDragDrop(containerId, optionsData) {
+            const container = document.getElementById(containerId);
+            shuffleArray(optionsData);
+
+            optionsData.forEach(opt => {
+                const el = document.createElement('div');
+                el.classList.add('draggable');
+                el.setAttribute('draggable', 'true');
+                el.setAttribute('data-val', opt.val);
+                el.textContent = opt.text;
+                
+                el.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', opt.val);
+                    el.style.opacity = '0.5';
+                });
+                el.addEventListener('dragend', () => { el.style.opacity = '1'; });
+                container.appendChild(el);
+            });
+        }
+
+        const dropZones = document.querySelectorAll('.drop-zone');
+        let completedCount = 0;
+        const totalBlanks = dropZones.length;
+
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.style.backgroundColor = '#dbeeff';
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.style.backgroundColor = 'rgba(255,255,255,0.5)';
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.style.backgroundColor = 'rgba(255,255,255,0.5)';
+                const val = e.dataTransfer.getData('text/plain');
+                const correctVal = zone.getAttribute('data-ans');
+
+                if (val === correctVal) {
+                    zone.textContent = val;
+                    zone.classList.add('filled');
+                    zone.removeAttribute('data-ans'); // Lock zone
+                    
+                    // Ẩn thẻ option đã chọn
+                    const allDraggables = document.querySelectorAll('.draggable');
+                    for (let d of allDraggables) {
+                         if (d.getAttribute('data-val') === val && d.style.display !== 'none' && !d.classList.contains('disabled')) {
+                             d.style.display = 'none';
+                             break;
+                         }
+                    }
+                    checkProgress();
+                } else {
+                    // Hiệu ứng sai nhẹ
+                    zone.style.transition = "background 0.2s";
+                    zone.style.background = "#ffe6e6";
+                    setTimeout(() => zone.style.background = "rgba(255,255,255,0.5)", 300);
+                }
+            });
+        });
+
+        function checkProgress() {
+            const filled = document.querySelectorAll('.drop-zone.filled');
+            
+            // Logic mở khóa bài b
+            const q1Blanks = document.getElementById('q1-box').querySelectorAll('.drop-zone').length;
+            const q1Filled = document.getElementById('q1-box').querySelectorAll('.drop-zone.filled').length;
+            
+            if (q1Filled === q1Blanks) {
+                const q2 = document.getElementById('q2-box');
+                q2.style.opacity = '1';
+                q2.style.pointerEvents = 'auto';
+                q2.style.filter = 'none';
+            }
+            
+            // Logic hoàn thành toàn bộ
+            if (filled.length === totalBlanks) {
+                document.getElementById('final-conclusion').style.display = 'block';
+                document.getElementById('final-conclusion').scrollIntoView({behavior: "smooth"});
+                
+                // Reset hình về hình chữ nhật
+                slider.value = 0;
+                drawParallelogram(0);
+                
+                // Khóa draggable
+                document.querySelectorAll('.draggable').forEach(d => d.classList.add('disabled'));
+            }
+        }
+
+        initDragDrop('options-1', dataSet1);
+        initDragDrop('options-2', dataSet2);
+
+    </script>
+</body>
+</html>
