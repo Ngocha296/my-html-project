@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Sơ Đồ Tứ Giác - Layout Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --blue: #0984e3;
+            --red: #d63031;
+            --green: #2ecc71;
+            --bg: #f4f7f6;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background-color: var(--bg);
+            margin: 0; overflow: hidden;
+            height: 100vh; width: 100vw;
+            display: flex; flex-direction: column;
+        }
+
+        /* --- NỀN TRÔI NỔI --- */
+        #bg-canvas { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+        .floating-shape { position: absolute; opacity: 0.1; animation: float linear infinite; }
+        @keyframes float { from { transform: translateY(110vh); } to { transform: translateY(-10vh); } }
+
+        /* --- BỐ CỤC CHÍNH --- */
+        header {
+            height: 50px; background: white; display: flex; align-items: center;
+            justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 100;
+        }
+
+        main { display: flex; flex: 1; overflow: hidden; }
+
+        /* BÊN TRÁI: SƠ ĐỒ DỌC */
+        .left-panel {
+            flex: 2.5; position: relative;
+            display: flex; flex-direction: column; align-items: center;
+            padding-top: 30px; border-right: 2px solid #ddd;
+        }
+
+        #connector-svg {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1;
+        }
+
+        .root-node {
+            background: var(--red); color: white; padding: 15px 40px;
+            border-radius: 12px; font-weight: bold; font-size: 24px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 10; margin-bottom: 80px;
+        }
+
+        .drop-zones-row {
+            display: flex; justify-content: center; gap: 20px;
+            width: 100%; z-index: 10; padding: 0 20px;
+        }
+
+        .drop-zone {
+            width: 230px; min-height: 130px; background: rgba(255,255,255,0.8);
+            border: 2px dashed #999; border-radius: 12px;
+            display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+            padding: 8px; gap: 5px; position: relative; transition: 0.3s;
+        }
+        .drop-zone.filled { border-style: solid; border-color: var(--blue); background: white; }
+        .drop-zone.hover { background: #e3f2fd; border-color: var(--blue); }
+
+        /* BÊN PHẢI: KHAY KÉO */
+        .right-panel {
+            flex: 1; background: white; padding: 15px;
+            display: flex; flex-direction: column; gap: 15px;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05); z-index: 10;
+        }
+
+        #drag-pool {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow-y: auto; flex: 1; padding-right: 5px;
+        }
+
+        .drag-item {
+            padding: 10px; background: white; border: 2px solid var(--blue);
+            border-radius: 8px; cursor: grab; font-size: 13px; text-align: center;
+            display: flex; align-items: center; justify-content: center;
+            width: 100%;
+        }
+        .drag-item svg { width: 70px; height: 50px; pointer-events: none; }
+
+        /* --- PHẢN HỒI --- */
+        .feedback-icon { position: absolute; top: -15px; right: -15px; font-size: 30px; display: none; }
+        .correct { border-color: var(--green) !important; box-shadow: 0 0 15px rgba(46, 204, 113, 0.2); }
+        .wrong { border-color: var(--red) !important; box-shadow: 0 0 15px rgba(214, 48, 49, 0.2); }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        button {
+            flex: 1; padding: 12px; border: none; border-radius: 10px;
+            color: white; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        #check-btn { background: var(--blue); }
+        #reset-btn { background: #636e72; }
+    </style>
+</head>
+<body>
+
+<div id="bg-canvas"></div>
+
+<header>
+    <h1 style="color: var(--blue); margin: 0; font-size: 20px;">📐 Thử Thách Sơ Đồ Tứ Giác</h1>
+</header>
+
+<main>
+    <div class="left-panel">
+        <svg id="connector-svg">
+            <path id="path1" d="" stroke="#0984e3" stroke-width="3" fill="none" opacity="0.4"/>
+            <path id="path2" d="" stroke="#0984e3" stroke-width="3" fill="none" opacity="0.4"/>
+            <path id="path3" d="" stroke="#0984e3" stroke-width="3" fill="none" opacity="0.4"/>
+        </svg>
+
+        <div class="root-node" id="rootNode">TỨ GIÁC</div>
+        
+        <div class="drop-zones-row">
+            <div>
+                <div style="font-weight: bold; color: var(--blue); margin-bottom: 5px; font-size: 14px;">Nhánh 1</div>
+                <div class="drop-zone" id="zone1" data-group="tg"></div>
+            </div>
+            <div>
+                <div style="font-weight: bold; color: var(--blue); margin-bottom: 5px; font-size: 14px;">Nhánh 2</div>
+                <div class="drop-zone" id="zone2" data-group="tgl"></div>
+            </div>
+            <div>
+                <div style="font-weight: bold; color: var(--blue); margin-bottom: 5px; font-size: 14px;">Nhánh 3</div>
+                <div class="drop-zone" id="zone3" data-group="dl"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <h3 style="margin: 0; font-size: 15px; color: #666;">Kho tri thức:</h3>
+        <div id="drag-pool">
+            <div class="drag-item" draggable="true" data-group="tg">Định nghĩa Tứ giác</div>
+            <div class="drag-item" draggable="true" data-group="tg">Hình gồm 4 đoạn thẳng khép kín, trong đó không có 2 đoạn nào cùng nằm trên một đường thẳng.</div>
+            <div class="drag-item" draggable="true" data-group="tg">
+                <svg viewBox="0 0 100 80"><polygon points="10,20 90,10 50,40 80,70 10,70" fill="none" stroke="#0984e3" stroke-width="4"/></svg>
+            </div>
+            <div class="drag-item" draggable="true" data-group="tgl">Tứ giác lồi</div>
+            <div class="drag-item" draggable="true" data-group="tgl">Tứ giác luôn nằm về một phía của đường thẳng chứa bất kì cạnh nào của nó.</div>
+            <div class="drag-item" draggable="true" data-group="tgl">
+                <svg viewBox="0 0 100 80"><polygon points="20,20 80,15 90,65 25,75" fill="rgba(214, 48, 49, 0.1)" stroke="#d63031" stroke-width="4"/><line x1="0" y1="78" x2="100" y2="70" stroke="#aaa" stroke-dasharray="4"/></svg>
+            </div>
+            <div class="drag-item" draggable="true" data-group="dl">Tổng các góc</div>
+            <div class="drag-item" draggable="true" data-group="dl">Tổng các góc trong một tứ giác bằng 360°</div>
+        </div>
+        
+        <div class="btn-group">
+            <button id="check-btn">🔍 Kiểm tra</button>
+            <button id="reset-btn">🔄 Reset</button>
+        </div>
+    </div>
+</main>
+
+<script>
+    // --- VẼ ĐƯỜNG NỐI SVG ---
+    function drawLines() {
+        const root = document.getElementById('rootNode').getBoundingClientRect();
+        const container = document.querySelector('.left-panel').getBoundingClientRect();
+        
+        const startX = (root.left + root.width / 2 - container.left);
+        const startY = (root.bottom - container.top);
+
+        for (let i = 1; i <= 3; i++) {
+            const zone = document.getElementById('zone' + i).getBoundingClientRect();
+            const endX = (zone.left + zone.width / 2 - container.left);
+            const endY = (zone.top - container.top);
+            
+            const cpY = startY + (endY - startY) / 2;
+            const path = `M ${startX} ${startY} C ${startX} ${cpY}, ${endX} ${cpY}, ${endX} ${endY}`;
+            document.getElementById('path' + i).setAttribute('d', path);
+        }
+    }
+
+    window.addEventListener('resize', drawLines);
+    setTimeout(drawLines, 500);
+
+    // --- LOGIC KÉO THẢ ---
+    let dragged = null;
+    document.addEventListener('dragstart', e => {
+        if(e.target.classList.contains('drag-item')) {
+            dragged = e.target;
+            e.target.style.opacity = '0.5';
+        }
+    });
+    document.addEventListener('dragend', e => {
+        if(e.target.classList.contains('drag-item')) e.target.style.opacity = '1';
+    });
+
+    const dropZones = document.querySelectorAll('.drop-zone');
+    const pool = document.getElementById('drag-pool');
+
+    [...dropZones, pool].forEach(zone => {
+        zone.addEventListener('dragover', e => e.preventDefault());
+        zone.addEventListener('dragenter', function() { if(this !== pool) this.classList.add('hover'); });
+        zone.addEventListener('dragleave', function() { this.classList.remove('hover'); });
+        zone.addEventListener('drop', function() {
+            this.classList.remove('hover');
+            this.appendChild(dragged);
+            if(this !== pool) this.classList.add('filled');
+            resetFeedback();
+        });
+    });
+
+    function resetFeedback() {
+        dropZones.forEach(z => {
+            z.classList.remove('correct', 'wrong');
+            const icon = z.querySelector('.feedback-icon');
+            if(icon) icon.style.display = 'none';
+        });
+    }
+
+    document.getElementById('check-btn').onclick = () => {
+        let winCount = 0;
+        dropZones.forEach(z => {
+            const items = z.querySelectorAll('.drag-item');
+            if(items.length > 0) {
+                const gps = Array.from(items).map(i => i.dataset.group);
+                const isCorrect = gps.every(g => g === gps[0]) && 
+                                 ((gps[0] === 'dl' && items.length === 2) || items.length === 3);
+                
+                let icon = z.querySelector('.feedback-icon') || document.createElement('div');
+                icon.className = 'feedback-icon'; z.appendChild(icon);
+                icon.style.display = 'block';
+
+                if(isCorrect) { z.classList.add('correct'); icon.innerText='😊'; winCount++; }
+                else { z.classList.add('wrong'); icon.innerText='☹️'; }
+            }
+        });
+        if(winCount === 3) confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+    };
+
+    document.getElementById('reset-btn').onclick = () => {
+        document.querySelectorAll('.drag-item').forEach(i => pool.appendChild(i));
+        resetFeedback();
+        dropZones.forEach(z => z.classList.remove('filled'));
+    };
+
+    // Tạo hình nền
+    const bg = document.getElementById('bg-canvas');
+    for(let i=0; i<15; i++) {
+        const s = document.createElement('div');
+        s.className = 'floating-shape';
+        s.style.width = s.style.height = Math.random()*25+10+'px';
+        s.style.left = Math.random()*100+'vw';
+        s.style.backgroundColor = ['#0984e3', '#d63031'][Math.floor(Math.random()*2)];
+        s.style.animationDuration = Math.random()*15+10+'s';
+        s.style.top = Math.random()*100+'vh';
+        bg.appendChild(s);
+    }
+</script>
+</body>
+</html>
