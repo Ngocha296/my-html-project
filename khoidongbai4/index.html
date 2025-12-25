@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        :root { --match: #e67e22; --primary: #3498db; --success: #27ae60; --dark: #1a202c; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; background: #fff; }
+        
+        /* BỐ CỤC 50/50 */
+        .game-side { flex: 1; background: var(--dark); display: flex; flex-direction: column; padding: 15px; align-items: center; justify-content: center; border-right: 2px solid #333; position: relative; }
+        .quiz-side { flex: 1; padding: 10px 25px; display: flex; flex-direction: column; background: #fdfdfd; gap: 8px; overflow-y: auto; }
+
+        /* KHO QUE DIÊM */
+        .pool { width: 90%; height: 60px; display: flex; justify-content: center; gap: 10px; border: 1px dashed #4a5568; border-radius: 10px; align-items: center; background: rgba(0,0,0,0.2); margin-bottom: 20px; }
+        .match { height: 10px; background: var(--match); border-radius: 5px; cursor: grab; position: relative; z-index: 100; transition: transform 0.2s; }
+        .match::after { content: ''; position: absolute; right: -2px; top: -2px; width: 14px; height: 14px; background: #c0392b; border-radius: 50%; }
+        .long { width: 180px; } .short { width: 120px; }
+
+        /* KHUNG LẮP RÁP CẢI TIẾN - KHÉP KÍN GÓC */
+        .frame { width: 180px; height: 120px; position: relative; transition: transform 0.1s linear; margin: 30px 0; }
+        
+        /* Slot line siêu mỏng */
+        .slot { position: absolute; background: rgba(255,255,255,0.1); border: 1px dashed #718096; box-sizing: border-box; transition: 0.3s; }
+        
+        /* Tọa độ chính xác từng pixel để khép góc */
+        .top    { width: 180px; height: 10px; top: 0; left: 0; }
+        .bottom { width: 180px; height: 10px; bottom: 0; left: 0; }
+        .left   { width: 10px; height: 120px; top: 0; left: 0; }
+        .right  { width: 10px; height: 120px; top: 0; right: 0; }
+
+        /* Vùng nhạy ẩn (tạo ra vùng đệm để dễ thả) */
+        .slot::before { content: ''; position: absolute; inset: -15px; } 
+
+        /* Khi đã lắp - Biến thành que diêm thật khép kín */
+        .slot.filled { background: var(--match) !important; border: none !important; box-shadow: 0 0 10px var(--match); z-index: 5; }
+        .slot.filled::after { content: ''; position: absolute; width: 14px; height: 14px; background: #c0392b; border-radius: 50%; z-index: 10; }
+
+        /* Vị trí chấm đỏ tại 4 đỉnh */
+        .top.filled::after    { top: -2px; right: -2px; }
+        .bottom.filled::after { bottom: -2px; left: -2px; }
+        .left.filled::after   { top: -2px; left: -2px; }
+        .right.filled::after  { bottom: -2px; right: -2px; }
+
+        /* ĐIỀU KHIỂN & GỢI Ý */
+        .control-box { width: 85%; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; text-align: center; }
+        input[type=range] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+        #hint-text { color: #f6e05e; font-size: 0.8rem; margin-top: 5px; font-style: italic; }
+
+        /* TRẮC NGHIỆM THU NHỎ */
+        h2 { margin: 0; font-size: 1.2rem; color: var(--dark); border-bottom: 2px solid var(--primary); padding-bottom: 5px; }
+        .card { background: #f7fafc; padding: 8px 12px; border-radius: 8px; border: 1px solid #edf2f7; position: relative; transition: 0.3s; margin-bottom: 5px; }
+        .question { font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 4px; color: #2d3748; line-height: 1.3; }
+        .options label { display: block; font-size: 0.85rem; margin: 2px 0; cursor: pointer; padding: 4px 8px; border-radius: 5px; }
+        .options label:hover { background: #e2e8f0; }
+        .btn-check { width: 100%; padding: 8px; border: none; border-radius: 6px; background: var(--primary); color: white; font-weight: bold; cursor: pointer; margin-top: 5px; font-size: 0.85rem; }
+        .icon { position: absolute; top: 8px; right: 12px; font-size: 18px; }
+        
+        .locked { opacity: 0.35; pointer-events: none; }
+
+        #congrats-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; color: white; }
+    </style>
+</head>
+<body>
+
+<div id="congrats-screen">
+    <div style="font-size: 3rem; font-weight: 900; color: #f6e05e; text-align: center;">XUẤT SẮC!</div>
+    <button style="padding:10px 25px; background:var(--success); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; margin-top: 20px;" onclick="location.reload()">LÀM LẠI</button>
+</div>
+
+<div class="game-side">
+    <div class="pool" id="pool">
+        <div class="match long" draggable="true" id="m1"></div>
+        <div class="match long" draggable="true" id="m2"></div>
+        <div class="match short" draggable="true" id="m3"></div>
+        <div class="match short" draggable="true" id="m4"></div>
+    </div>
+    <div class="workspace">
+        <div class="frame" id="mainFrame" style="transform: skewX(25deg);">
+            <div class="slot top" data-type="long"></div>
+            <div class="slot bottom" data-type="long"></div>
+            <div class="slot left" data-type="short"></div>
+            <div class="slot right" data-type="short"></div>
+        </div>
+    </div>
+    <div class="control-box">
+        <div style="color: #cbd5e0; font-size: 0.8rem; font-weight: bold;">Nắn chỉnh khung hình (Độ nghiêng)</div>
+        <input type="range" id="slider" min="0" max="45" value="25">
+        <div id="hint-text">Hãy lắp ráp 4 que diêm để bắt đầu...</div>
+    </div>
+</div>
+
+<div class="quiz-side">
+    <h2>Khởi động</h2>
+    <div class="card locked" id="q1-box">
+        <div id="i1" class="icon"></div>
+        <span class="question">1. Khi bạn nắn hình, yếu tố nào của các cạnh KHÔNG BAO GIỜ thay đổi?</span>
+        <div class="options">
+            <label><input type="radio" name="q1" value="a"> Các góc kề nhau</label>
+            <label><input type="radio" name="q1" value="b"> Độ dài cạnh và sự song song</label>
+        </div>
+        <button class="btn-check" onclick="checkQ(1,'b','i1')">Kiểm tra</button>
+    </div>
+
+    <div class="card locked" id="q2-box">
+        <div id="i2" class="icon"></div>
+        <span class="question">2. Khi khung hình nắn "Thẳng", điều kiện tiên quyết là gì?</span>
+        <div class="options">
+            <label><input type="radio" name="q2" value="a"> Có ít nhất một góc vuông</label>
+            <label><input type="radio" name="q2" value="b"> Hai cạnh bên bằng nhau</label>
+        </div>
+        <button class="btn-check" onclick="checkQ(2,'a','i2')">Kiểm tra</button>
+    </div>
+
+    <div class="card locked" id="q3-box">
+        <div id="i3" class="icon"></div>
+        <span class="question">3. Hình chữ nhật là trường hợp đặc biệt của:</span>
+        <div class="options">
+            <label><input type="radio" name="q3" value="a"> Hình bình hành</label>
+            <label><input type="radio" name="q3" value="b"> Hình thang cân</label>
+        </div>
+        <button class="btn-check" onclick="checkQ(3,'a','i3')">Kiểm tra</button>
+    </div>
+</div>
+
+<script>
+    let filled = 0, isRect = false, results = [false, false, false];
+
+    document.querySelectorAll('.match').forEach(stick => {
+        stick.addEventListener('dragstart', e => {
+            e.dataTransfer.setData("type", stick.classList.contains('short') ? 'short' : 'long');
+            e.dataTransfer.setData("id", stick.id);
+        });
+    });
+
+    document.querySelectorAll('.slot').forEach(slot => {
+        slot.addEventListener('dragover', e => e.preventDefault());
+        slot.addEventListener('drop', e => {
+            e.preventDefault();
+            const type = e.dataTransfer.getData("type"), id = e.dataTransfer.getData("id");
+            if(slot.dataset.type === type && !slot.classList.contains('filled')) {
+                slot.classList.add('filled');
+                document.getElementById(id).style.display = 'none';
+                filled++;
+                updateState();
+            }
+        });
+    });
+
+    document.getElementById('slider').addEventListener('input', e => {
+        const val = e.target.value;
+        document.getElementById('mainFrame').style.transform = `skewX(${val}deg)`;
+        isRect = (val == 0);
+        updateState();
+    });
+
+    function updateState() {
+        const hint = document.getElementById('hint-text');
+        if(filled < 4) hint.innerText = `Cần lắp thêm ${4-filled} que diêm...`;
+        else {
+            hint.innerText = isRect ? "Hình đã vuông vức!" : "Hãy nắn hình về mức 0!";
+            document.getElementById('q1-box').classList.remove('locked');
+            if(isRect) document.getElementById('q2-box').classList.remove('locked');
+        }
+    }
+
+    function checkQ(n, ans, iconId) {
+        const sel = document.querySelector(`input[name="q${n}"]:checked`);
+        if(sel && sel.value === ans) {
+            document.getElementById(iconId).innerText = "✅"; results[n-1] = true;
+            if(n < 3) document.getElementById(`q${n+1}-box`).classList.remove('locked');
+            if(results.every((r,i) => i === 2 ? true : r) && isRect && filled === 4) {
+                const q3 = document.querySelector('input[name="q3"]:checked');
+                if(q3 && q3.value === 'a') {
+                    document.getElementById('congrats-screen').style.display = 'flex';
+                    confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
+                }
+            }
+        } else if(sel) document.getElementById(iconId).innerText = "❌";
+    }
+</script>
+</body>
+</html>
