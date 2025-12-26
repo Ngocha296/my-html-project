@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhận biết hình vuông</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #f3f4f6;
+            --success-color: #10b981;
+            --error-color: #ef4444;
+            --text-color: #1f2937;
+            --border-radius: 12px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f9fafb;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            padding: 25px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .visualization-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #eef2ff;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        svg {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* Tabs cho Bài 6 */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: var(--secondary-color);
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Controls & Quiz */
+        .controls {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .quiz-section {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quiz-btn {
+            padding: 10px;
+            text-align: left;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quiz-btn:hover {
+            background: #f3f4f6;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .feedback.correct {
+            background-color: #d1fae5;
+            color: #065f46;
+            display: block;
+        }
+
+        .feedback.incorrect {
+            background-color: #fee2e2;
+            color: #991b1b;
+            display: block;
+        }
+
+        /* Sub-sections for Bai 7 */
+        .sub-section {
+            margin-top: 30px;
+            border-top: 1px dashed #ccc;
+            padding-top: 20px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* SVG Styles */
+        .shape {
+            fill: rgba(37, 99, 235, 0.1);
+            stroke: var(--primary-color);
+            stroke-width: 2;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .diagonal {
+            stroke: #9ca3af;
+            stroke-width: 1;
+            stroke-dasharray: 5,5;
+            transition: all 0.8s;
+        }
+
+        .label {
+            font-size: 14px;
+            font-weight: bold;
+            fill: var(--text-color);
+        }
+
+        .mark {
+            stroke: var(--error-color);
+            stroke-width: 2;
+            fill: none;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Nhận biết hình vuông</h1>
+
+    <div class="card" id="bai6">
+        <div class="card-header">
+            <div class="card-title">Bài 6: Nhận biết Hình Vuông</div>
+            <p>Cho hình chữ nhật ABCD. Giải thích tại sao ABCD là hình vuông trong các trường hợp sau:</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab(6, 1)">Trường hợp 1: AB = BC</button>
+            <button class="tab-btn" onclick="switchTab(6, 2)">Trường hợp 2: AC ⟂ BD</button>
+            <button class="tab-btn" onclick="switchTab(6, 3)">Trường hợp 3: AC là phân giác</button>
+        </div>
+
+        <div class="visualization-area">
+            <svg id="svg-bai6" width="300" height="200" viewBox="0 0 300 200">
+                </svg>
+        </div>
+
+        <div id="b6-case1" class="tab-content active">
+            <div class="controls">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="check-b6-c1" onchange="toggleB6C1()">
+                    <span class="slider"></span>
+                </label>
+                <span style="font-weight: bold;">Giả sử: AB = BC</span>
+            </div>
+            <div class="quiz-section">
+                <p><strong>Câu hỏi:</strong> Vì sao khi AB = BC thì ABCD là hình vuông?</p>
+                <div class="quiz-options">
+                    <button class="quiz-btn" onclick="checkAnswer(this, true, 'Chính xác! Hình chữ nhật có hai cạnh kề bằng nhau là dấu hiệu nhận biết hình vuông.')">A. Hình chữ nhật có hai cạnh kề bằng nhau</button>
+                    <button class="quiz-btn" onclick="checkAnswer(this, false, 'Sai rồi. Hai cạnh đối của hình chữ nhật luôn bằng nhau, điều đó không đủ để khẳng định nó là hình vuông.')">B. Hình chữ nhật có hai cạnh đối bằng nhau</button>
+                    <button class="quiz-btn" onclick="checkAnswer(this, false, 'Sai rồi. Hình chữ nhật nào cũng có 4 góc vuông.')">C. Hình chữ nhật có bốn góc vuông</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+        </div>
+
+        <div id="b6-case2" class="tab-content">
+            <div class="controls">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="check-b6-c2" onchange="toggleB6C2()">
+                    <span class="slider"></span>
+                </label>
+                <span style="font-weight: bold;">Giả sử: AC ⟂ BD</span>
+            </div>
+            <div class="quiz-section">
+                <p><strong>Câu hỏi:</strong> Khi hai đường chéo của hình chữ nhật vuông góc, ta kết luận gì?</p>
+                <div class="quiz-options">
+                    <button class="quiz-btn" onclick="checkAnswer(this, false, 'Chưa chính xác nhất. Hình bình hành chưa đủ điều kiện vuông góc ở hình chữ nhật.')">A. ABCD là hình bình hành</button>
+                    <button class="quiz-btn" onclick="checkAnswer(this, true, 'Đúng! Hình chữ nhật có hai đường chéo vuông góc là hình vuông.')">B. ABCD là hình vuông</button>
+                    <button class="quiz-btn" onclick="checkAnswer(this, false, 'Sai. Hình thoi không nhất thiết có các góc vuông (trừ khi nó là hình vuông).')">C. ABCD là hình thoi (chỉ xét tính chất cạnh)</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+        </div>
+
+        <div id="b6-case3" class="tab-content">
+            <div class="controls">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="check-b6-c3" onchange="toggleB6C3()">
+                    <span class="slider"></span>
+                </label>
+                <span style="font-weight: bold;">Giả sử: AC là phân giác ∠BAD</span>
+            </div>
+            <div class="quiz-section">
+                <p><strong>Câu hỏi:</strong> Từ việc AC là phân giác ∠BAD, suy ra điều gì trực tiếp nhất?</p>
+                <div class="quiz-options">
+                    <button class="quiz-btn" onclick="checkAnswer(this, false, 'Chưa đủ. Chỉ suy ra 2 cạnh kề bằng nhau.')">A. AB = AD</button>
+                    <button class="quiz-btn" onclick="checkAnswer(this, false, 'Chưa đủ. Cần kết hợp tính chất hình chữ nhật.')">B. ABCD có bốn cạnh bằng nhau</button>
+                    <button class="quiz-btn" onclick="checkAnswer(this, true, 'Chính xác! Hình chữ nhật có đường chéo là phân giác một góc thì là hình vuông.')">C. ABCD là hình vuông</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card" id="bai7">
+        <div class="card-header">
+            <div class="card-title">Bài 7: Tính chất góc vuông trong Hình Thoi</div>
+            <p>Cho hình thoi ABCD. Hãy quan sát và đưa ra kết luận.</p>
+        </div>
+
+        <div class="visualization-area">
+            <svg id="svg-bai7" width="300" height="200" viewBox="0 0 300 200">
+                </svg>
+        </div>
+
+        <div class="sub-section">
+            <h3>a) Nếu ∠BAD là góc vuông</h3>
+            <div class="controls">
+                <input type="range" id="slider-b7-a" min="60" max="90" value="60" oninput="updateB7A(this.value)" style="width: 150px;">
+                <span id="angle-display" style="font-weight: bold; margin-left: 10px;">∠BAD = 60°</span>
+            </div>
+            <div class="quiz-section">
+                <p><strong>Câu hỏi:</strong> Khi ∠BAD là góc vuông (90°), các góc còn lại của hình thoi là gì?</p>
+                <div class="quiz-options">
+                    <button class="quiz-btn" onclick="checkAnswer(this, false, 'Sai. Nếu một góc vuông thì các góc kề bù với nó cũng phải vuông.')">A. Góc nhọn và tù xen kẽ</button>
+                    <button class="quiz-btn" onclick="checkAnswer(this, false, 'Sai.')">B. Góc tù</button>
+                    <button class="quiz-btn" onclick="checkAnswer(this, true, 'Chính xác! Hình thoi có 1 góc vuông thì trở thành hình vuông, tất cả các góc đều vuông.')">C. Tất cả đều là Góc vuông</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+        </div>
+
+        <div class="sub-section">
+            <h3>b) Nếu hai đường chéo AC = BD</h3>
+            <div class="controls">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="check-b7-b" onchange="toggleB7B()">
+                    <span class="slider"></span>
+                </label>
+                <span style="font-weight: bold;">Giả sử: AC = BD</span>
+            </div>
+            <div class="quiz-section">
+                <p><strong>Câu hỏi:</strong> Từ AC = BD, suy ra điều gì?</p>
+                <div class="quiz-options">
+                    <button class="quiz-btn" onclick="checkAnswer(this, false, 'Sai. Hình thoi đã là hình bình hành rồi.')">A. Hình thoi là hình bình hành</button>
+                    <button class="quiz-btn" onclick="checkAnswer(this, true, 'Đúng! Hình thoi có hai đường chéo bằng nhau thì là Hình Vuông (suy ra góc vuông).')">B. ∠BAD là góc vuông (Hình vuông)</button>
+                    <button class="quiz-btn" onclick="checkAnswer(this, false, 'Chưa chính xác hoàn toàn. Hình chữ nhật không đảm bảo 4 cạnh bằng nhau như hình thoi.')">C. Hình thoi là hình chữ nhật</button>
+                </div>
+                <div class="feedback"></div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    /* =========================================
+       HÀM VẼ HÌNH CƠ BẢN
+       ========================================= */
+    function createSVGElement(tag, attrs) {
+        const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+        for (let k in attrs) {
+            el.setAttribute(k, attrs[k]);
+        }
+        return el;
+    }
+
+    function drawText(svg, x, y, content, color = '#1f2937') {
+        const text = createSVGElement('text', {
+            x: x, y: y, fill: color, 'font-size': '14', 'font-weight': 'bold', 'font-family': 'sans-serif'
+        });
+        text.textContent = content;
+        svg.appendChild(text);
+    }
+
+    /* =========================================
+       BÀI 6: HÌNH CHỮ NHẬT -> HÌNH VUÔNG
+       ========================================= */
+    const svg6 = document.getElementById('svg-bai6');
+    let b6State = {
+        isSquare: false,
+        showDiagonals: false,
+        showPerpendicular: false,
+        showBisector: false
+    };
+
+    function drawBai6() {
+        svg6.innerHTML = ''; // Clear
+        
+        // Tọa độ trung tâm
+        const cx = 150, cy = 100;
+        // Chiều rộng cố định ban đầu là 180, cao 100
+        // Nếu isSquare thì rộng = cao = 100
+        const h = 100;
+        const w = b6State.isSquare ? 100 : 180;
+        
+        const x = cx - w/2;
+        const y = cy - h/2;
+
+        const A = {x: x, y: y};
+        const B = {x: x+w, y: y};
+        const C = {x: x+w, y: y+h};
+        const D = {x: x, y: y+h};
+
+        // Vẽ hình chữ nhật
+        const rect = createSVGElement('rect', {
+            x: x, y: y, width: w, height: h,
+            class: 'shape'
+        });
+        svg6.appendChild(rect);
+
+        // Vẽ đường chéo nếu cần
+        if (b6State.showDiagonals) {
+            svg6.appendChild(createSVGElement('line', {
+                x1: A.x, y1: A.y, x2: C.x, y2: C.y, class: 'diagonal'
+            }));
+            svg6.appendChild(createSVGElement('line', {
+                x1: B.x, y1: B.y, x2: D.x, y2: D.y, class: 'diagonal'
+            }));
+
+            // Ký hiệu vuông góc giao điểm
+            if (b6State.showPerpendicular) {
+                // Giao điểm O
+                const size = 10;
+                // Vẽ ký hiệu vuông góc chuẩn hơn bằng path
+                const p = 8;
+                const pathStr = `M ${cx} ${cy-p} L ${cx+p} ${cy} L ${cx} ${cy+p} L ${cx-p} ${cy} Z`;
+                svg6.appendChild(createSVGElement('path', {
+                    d: pathStr, fill: 'rgba(255,0,0,0.3)', stroke: 'red'
+                }));
+            }
+        }
+
+        // Ký hiệu phân giác
+        if (b6State.showBisector) {
+            // Vẽ đường chéo AC
+            svg6.appendChild(createSVGElement('line', {
+                x1: A.x, y1: A.y, x2: C.x, y2: C.y, class: 'diagonal', stroke: 'red'
+            }));
+            // Vẽ 2 cung tròn nhỏ tại A
+            svg6.appendChild(createSVGElement('path', {
+                d: `M ${A.x + 20} ${A.y} A 20 20 0 0 1 ${A.x + 15} ${A.y + 15}`,
+                fill: 'none', stroke: 'red', 'stroke-width': 1.5
+            }));
+             svg6.appendChild(createSVGElement('path', {
+                d: `M ${A.x + 15} ${A.y + 15} A 20 20 0 0 1 ${A.x} ${A.y + 20}`,
+                fill: 'none', stroke: 'red', 'stroke-width': 1.5
+            }));
+        }
+
+        // Nhãn đỉnh
+        drawText(svg6, A.x - 15, A.y - 5, 'A');
+        drawText(svg6, B.x + 5, B.y - 5, 'B');
+        drawText(svg6, C.x + 5, C.y + 15, 'C');
+        drawText(svg6, D.x - 15, D.y + 15, 'D');
+    }
+
+    // Logic Tab Bài 6
+    function switchTab(problem, tabIndex) {
+        // Ẩn hiện tab content
+        document.querySelectorAll(`#bai${problem} .tab-content`).forEach((el, index) => {
+            if (index + 1 === tabIndex) el.classList.add('active');
+            else el.classList.remove('active');
+        });
+        
+        // Active button style
+        document.querySelectorAll(`#bai${problem} .tab-btn`).forEach((el, index) => {
+            if (index + 1 === tabIndex) el.classList.add('active');
+            else el.classList.remove('active');
+        });
+
+        // Reset trạng thái hình vẽ khi chuyển tab
+        b6State = { isSquare: false, showDiagonals: false, showPerpendicular: false, showBisector: false };
+        
+        // Reset inputs
+        document.getElementById('check-b6-c1').checked = false;
+        document.getElementById('check-b6-c2').checked = false;
+        document.getElementById('check-b6-c3').checked = false;
+        
+        // Cấu hình riêng cho từng tab (chuẩn bị)
+        if (tabIndex === 2) { b6State.showDiagonals = true; }
+        if (tabIndex === 3) { /* Sẽ vẽ khi bật check */ }
+
+        resetFeedback();
+        drawBai6();
+    }
+
+    function toggleB6C1() {
+        const isChecked = document.getElementById('check-b6-c1').checked;
+        b6State.isSquare = isChecked;
+        drawBai6();
+    }
+
+    function toggleB6C2() {
+        const isChecked = document.getElementById('check-b6-c2').checked;
+        b6State.isSquare = isChecked;
+        b6State.showDiagonals = true;
+        b6State.showPerpendicular = isChecked;
+        drawBai6();
+    }
+
+    function toggleB6C3() {
+        const isChecked = document.getElementById('check-b6-c3').checked;
+        b6State.isSquare = isChecked;
+        b6State.showBisector = isChecked;
+        drawBai6();
+    }
+
+
+    /* =========================================
+       BÀI 7: HÌNH THOI -> HÌNH VUÔNG
+       ========================================= */
+    const svg7 = document.getElementById('svg-bai7');
+    let b7State = {
+        angleA: 60, // Độ
+        forceSquare: false // Dùng cho bài 7b
+    };
+
+    function toRad(deg) { return deg * Math.PI / 180; }
+
+    function drawBai7() {
+        svg7.innerHTML = '';
+        const cx = 150, cy = 100;
+        const side = 70; // Độ dài cạnh hình thoi
+        
+        let angle = b7State.forceSquare ? 90 : b7State.angleA;
+        let rad = toRad(angle / 2);
+
+        // Tính toán tọa độ
+        const dy = side * Math.cos(rad); // Nửa đường chéo dọc (AC/2)
+        const dx = side * Math.sin(rad); // Nửa đường chéo ngang (BD/2)
+
+        const A = {x: cx, y: cy - dy};
+        const C = {x: cx, y: cy + dy};
+        const B = {x: cx + dx, y: cy};
+        const D = {x: cx - dx, y: cy};
+
+        // Vẽ Polygon
+        const pathStr = `M ${A.x} ${A.y} L ${B.x} ${B.y} L ${C.x} ${C.y} L ${D.x} ${D.y} Z`;
+        svg7.appendChild(createSVGElement('path', {
+            d: pathStr, class: 'shape', 
+            fill: (angle === 90) ? 'rgba(16, 185, 129, 0.2)' : 'rgba(37, 99, 235, 0.1)',
+            stroke: (angle === 90) ? '#10b981' : '#2563eb'
+        }));
+
+        // Vẽ đường chéo
+        svg7.appendChild(createSVGElement('line', { x1:A.x, y1:A.y, x2:C.x, y2:C.y, class:'diagonal' }));
+        svg7.appendChild(createSVGElement('line', { x1:B.x, y1:B.y, x2:D.x, y2:D.y, class:'diagonal' }));
+
+        // Ký hiệu góc vuông tại A nếu 90 độ
+        if (angle === 90) {
+            svg7.appendChild(createSVGElement('path', {
+               d: `M ${A.x - 10} ${A.y + 10} L ${A.x} ${A.y + 20} L ${A.x + 10} ${A.y + 10}`,
+               fill: 'none', stroke: 'red', 'stroke-width': 1.5
+            }));
+        }
+
+        drawText(svg7, A.x - 10, A.y - 10, 'A');
+        drawText(svg7, B.x + 10, B.y + 5, 'B');
+        drawText(svg7, C.x - 5, C.y + 20, 'C');
+        drawText(svg7, D.x - 20, D.y + 5, 'D');
+    }
+
+    function updateB7A(val) {
+        document.getElementById('check-b7-b').checked = false;
+        b7State.forceSquare = false;
+
+        b7State.angleA = parseInt(val);
+        document.getElementById('angle-display').innerText = `∠BAD = ${val}°`;
+        
+        if (val == 90) {
+            document.getElementById('angle-display').style.color = 'var(--success-color)';
+            document.getElementById('angle-display').innerText += " (Góc vuông)";
+        } else {
+            document.getElementById('angle-display').style.color = 'var(--text-color)';
+        }
+        drawBai7();
+    }
+
+    function toggleB7B() {
+        const isChecked = document.getElementById('check-b7-b').checked;
+        b7State.forceSquare = isChecked;
+        
+        if(isChecked) {
+            document.getElementById('slider-b7-a').value = 90;
+            document.getElementById('angle-display').innerText = `∠BAD = 90° (Tự động)`;
+        } else {
+            document.getElementById('slider-b7-a').value = 60;
+            document.getElementById('angle-display').innerText = `∠BAD = 60°`;
+        }
+        drawBai7();
+    }
+
+    /* =========================================
+       LOGIC TRẮC NGHIỆM CHUNG
+       ========================================= */
+    function checkAnswer(btn, isCorrect, msg) {
+        const parent = btn.closest('.quiz-section');
+        const feedback = parent.querySelector('.feedback');
+        
+        parent.querySelectorAll('.quiz-btn').forEach(b => {
+            b.style.background = 'white';
+            b.style.borderColor = '#d1d5db';
+        });
+
+        if (isCorrect) {
+            btn.style.background = '#ecfdf5';
+            btn.style.borderColor = '#10b981';
+            feedback.className = 'feedback correct';
+        } else {
+            btn.style.background = '#fef2f2';
+            btn.style.borderColor = '#ef4444';
+            feedback.className = 'feedback incorrect';
+        }
+
+        feedback.textContent = msg;
+    }
+
+    function resetFeedback() {
+        document.querySelectorAll('.feedback').forEach(el => {
+            el.style.display = 'none';
+        });
+        document.querySelectorAll('.quiz-btn').forEach(b => {
+            b.style.background = 'white';
+            b.style.borderColor = '#d1d5db';
+        });
+    }
+
+    window.onload = function() {
+        drawBai6();
+        drawBai7();
+    };
+</script>
+
+</body>
+</html>
