@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toán 8 - Tính chất của Hình thoi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Palette màu sắc tươi sáng */
+            --bg-gradient: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            
+            --card-prob-head: linear-gradient(to right, #11998e, #38ef7d);
+            --card-1-head: linear-gradient(to right, #ff9966, #ff5e62);
+            --card-2-head: linear-gradient(to right, #8e2de2, #4a00e0);
+            
+            --text-dark: #2d3436;
+            --white: #ffffff;
+            --shadow: 0 10px 20px rgba(0,0,0,0.1);
+            --radius: 16px;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-image: var(--bg-gradient);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            margin-top: 20px;
+            padding-bottom: 50px;
+        }
+
+        /* HEADER */
+        .main-title {
+            text-align: center;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            font-size: 2.2rem;
+            margin-bottom: 30px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            padding: 15px;
+            border-radius: var(--radius);
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        /* CARD STYLES */
+        .card {
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            padding: 15px 25px;
+            color: var(--white);
+            font-weight: 800;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+        }
+        
+        .prob-header { background: var(--card-prob-head); }
+        .part1-header { background: var(--card-1-head); }
+        .part2-header { background: var(--card-2-head); }
+
+        .card-body {
+            padding: 25px;
+            font-size: 1.05rem;
+        }
+
+        /* VISUALIZATION AREA */
+        .visualization-area {
+            background-color: #fff;
+            background-image: 
+                linear-gradient(#e6e6fa 1px, transparent 1px),
+                linear-gradient(90deg, #e6e6fa 1px, transparent 1px);
+            background-size: 25px 25px;
+            border: 2px dashed #b19cd9;
+            border-radius: var(--radius);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 0;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        /* SVG STYLES - ĐÃ CHỈNH SỬA HIỆU ỨNG */
+        svg {
+            width: 240px;
+            height: 240px;
+            overflow: visible;
+        }
+
+        .shape {
+            fill: #ff6b6b; /* Màu gốc */
+            stroke: #fff;
+            stroke-width: 2px;
+            cursor: pointer;
+            /* Chuyển động mượt mà cho màu và bóng */
+            transition: fill 0.3s ease, filter 0.3s ease, stroke 0.3s ease; 
+        }
+
+        /* Hiệu ứng Hover mới: KHÔNG rung lắc, chỉ phát sáng */
+        .shape:hover, .shape.active {
+            fill: #feca57; /* Chuyển sang màu vàng tươi */
+            stroke: #2d3436; /* Viền đậm hơn để rõ nét */
+            /* Tạo hiệu ứng phát sáng nhẹ xung quanh (Glow) */
+            filter: drop-shadow(0 0 10px rgba(254, 202, 87, 0.7)); 
+            z-index: 10;
+        }
+
+        /* BUTTONS & INPUTS */
+        .option-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .option-btn {
+            background: #f1f2f6;
+            border: 2px solid transparent;
+            padding: 15px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #57606f;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .option-btn:hover {
+            background: #dfe4ea;
+            border-color: #ccc;
+        }
+
+        .option-btn.selected {
+            background: #fff0ed;
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        .btn {
+            background-image: linear-gradient(to right, #6a11cb 0%, #2575fc 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(37, 117, 252, 0.4);
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover { transform: scale(1.02); }
+        
+        .btn-outline {
+            background: white;
+            color: #f0932b;
+            border: 2px solid #f0932b;
+            box-shadow: none;
+        }
+        .btn-outline:hover { background: #fff8e1; }
+
+        .input-wrapper {
+            background: #f1f2f6;
+            padding: 20px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        input[type="number"] {
+            border: 2px solid #ced6e0;
+            border-radius: 8px;
+            padding: 10px;
+            width: 100px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2f3542;
+            text-align: center;
+        }
+        input[type="number"]:focus {
+            border-color: #8e2de2;
+            outline: none;
+        }
+
+        /* MESSAGES */
+        .msg {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            animation: slideIn 0.4s ease;
+        }
+        .msg.success { background: #dff9fb; color: #130f40; border-left: 5px solid #22a6b3; }
+        .msg.error { background: #ffdd59; color: #483d8b; border-left: 5px solid #f0932b; }
+        .msg.hint { background: #eee; border-left: 5px solid #95afc0; font-style: italic; }
+
+        .hidden { display: none; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .icon { margin-right: 8px; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1 class="main-title">✨ Tính chất của Hình thoi ✨</h1>
+
+    <div class="card">
+        <div class="card-header prob-header">
+            <span class="icon">📝</span> ĐỀ BÀI
+        </div>
+        <div class="card-body">
+            <p>Một hoa văn trang trí được ghép bởi ba hình tứ giác có độ dài mỗi cạnh đều bằng <strong>2 cm</strong> (Hình bên dưới).</p>
+            <ul style="list-style: none; padding-left: 10px;">
+                <li>🔹 <strong>a)</strong> Gọi tên các tứ giác này.</li>
+                <li>🔹 <strong>b)</strong> Tính chu vi của hoa văn.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="visualization-area">
+        <svg viewBox="0 0 200 200">
+            <defs>
+                <path id="rhombus-def" d="M 0 0 L 25 43.3 L 0 86.6 L -25 43.3 Z" />
+            </defs>
+            <g transform="translate(100, 100)">
+                <use href="#rhombus-def" class="shape" transform="rotate(180)" onclick="selectShape(this)"/>
+                <use href="#rhombus-def" class="shape" transform="rotate(60)" onclick="selectShape(this)"/>
+                <use href="#rhombus-def" class="shape" transform="rotate(-60)" onclick="selectShape(this)"/>
+            </g>
+        </svg>
+    </div>
+
+    <div class="card" id="part1">
+        <div class="card-header part1-header">
+            <span class="icon">🔍</span> Câu a: Nhận dạng hình
+        </div>
+        <div class="card-body">
+            <p>Hãy quan sát và chọn tên gọi đúng nhất cho các tứ giác trên:</p>
+            
+            <div class="option-group">
+                <button class="option-btn" onclick="checkPart1(this, 'thang')">A. Hình thang</button>
+                <button class="option-btn" onclick="checkPart1(this, 'binhhanh')">B. Hình bình hành</button>
+                <button class="option-btn" onclick="checkPart1(this, 'thoi')">C. Hình thoi</button>
+                <button class="option-btn" onclick="checkPart1(this, 'chunhat')">D. Hình chữ nhật</button>
+            </div>
+
+            <div id="fb1" class="msg"></div>
+        </div>
+    </div>
+
+    <div class="card hidden" id="part2">
+        <div class="card-header part2-header">
+            <span class="icon">🧮</span> Câu b: Tính chu vi
+        </div>
+        <div class="card-body">
+            <p>Biết độ dài mỗi cạnh của hình thoi là <strong style="color:#d35400; font-size:1.2em">2 cm</strong>.</p>
+            <p>Hãy tính <strong>chu vi của hoa văn</strong> (tổng độ dài đường bao quanh).</p>
+            
+            <div class="input-wrapper">
+                <label>Chu vi = </label>
+                <input type="number" id="perimeterInput" placeholder="?"> 
+                <span>cm</span>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" onclick="checkPart2()">Kiểm tra kết quả</button>
+                <button class="btn btn-outline" id="btnHint" onclick="showHint()">Bí quá? Xem gợi ý</button>
+            </div>
+
+            <div id="hintBox" class="msg hint"></div>
+            <div id="fb2" class="msg"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Logic highlight hình
+    function selectShape(el) {
+        if (el.classList.contains('active')) {
+            el.classList.remove('active');
+        } else {
+            el.classList.add('active');
+        }
+    }
+
+    // Logic Phần 1
+    function checkPart1(btn, val) {
+        document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+
+        const fb = document.getElementById('fb1');
+        fb.style.display = 'block';
+
+        if (val === 'thoi') {
+            fb.className = 'msg success';
+            fb.innerHTML = '<strong>🎉 Chính xác!</strong> Vì 4 cạnh bằng nhau nên đây là Hình Thoi.';
+            
+            setTimeout(() => {
+                const p2 = document.getElementById('part2');
+                p2.classList.remove('hidden');
+                p2.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 1000);
+            
+            document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+        } else {
+            fb.className = 'msg error';
+            fb.innerHTML = '<strong>🤔 Chưa đúng rồi.</strong> Hãy nhìn kỹ độ dài các cạnh nhé!';
+        }
+    }
+
+    // Logic Gợi ý
+    let hintStep = 0;
+    const hints = [
+        "Chu vi hoa văn là tổng độ dài các cạnh nằm ở đường viền ngoài cùng.",
+        "Các hình thoi này ghép chung đỉnh, nên các cạnh đều nằm ra ngoài.",
+        "Đếm tổng số cạnh rồi nhân với 2 cm nhé!"
+    ];
+
+    function showHint() {
+        const box = document.getElementById('hintBox');
+        const btn = document.getElementById('btnHint');
+        box.style.display = 'block';
+        
+        if (hintStep < hints.length) {
+            box.innerText = "💡 Gợi ý: " + hints[hintStep];
+            hintStep++;
+        } else {
+            box.innerText = "💡 Chốt: Có tất cả 12 cạnh. Em tính xem!";
+            btn.innerText = "Hết gợi ý";
+            btn.disabled = true;
+        }
+    }
+
+    // Logic Phần 2
+    function checkPart2() {
+        const val = parseFloat(document.getElementById('perimeterInput').value);
+        const fb = document.getElementById('fb2');
+        fb.style.display = 'block';
+
+        if (val === 24) {
+            fb.className = 'msg success';
+            fb.innerHTML = '<strong>🏆 Xuất sắc! Đáp án đúng là 24 cm.</strong><br>Giải thích: 3 hình thoi x 4 cạnh = 12 cạnh. <br>12 cạnh x 2 cm = 24 cm.';
+        } else {
+            fb.className = 'msg error';
+            fb.innerHTML = '😅 Tiếc quá, chưa đúng. Hãy đếm kỹ số cạnh của bông hoa nhé.';
+        }
+    }
+</script>
+
+</body>
+</html>
