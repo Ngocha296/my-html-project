@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hình Học 8: Dấu Hiệu Nhận Biết HBH</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f1f5f9; }
+        .case-card { background: white; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); overflow: hidden; }
+        .svg-wrapper { background-color: #ffffff; display: flex; justify-content: center; align-items: center; padding: 20px; border-right: 1px solid #e2e8f0; }
+        svg { width: 100%; max-width: 380px; height: auto; display: block; }
+
+        /* Style SVG */
+        .line-main { stroke: #1e293b; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .line-thin { stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 5,5; fill: none; }
+        
+        /* Ký hiệu gạch đỏ (Tick marks) */
+        .mark-tick { stroke: #dc2626; stroke-width: 2.5; stroke-linecap: round; } 
+        
+        /* Ký hiệu góc */
+        .mark-angle { stroke: #dc2626; stroke-width: 2; fill: none; stroke-linecap: round; }
+        
+        .text-label { font-family: Arial, sans-serif; font-weight: bold; font-size: 16px; fill: #0f172a; }
+        .point-dot { fill: #0f172a; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto">
+        <div class="bg-blue-800 text-white p-6 rounded-xl text-center mb-10 shadow-lg border-b-4 border-blue-900">
+            <h1 class="text-2xl font-bold uppercase tracking-wider">BÀI TẬP: DẤU HIỆU NHẬN BIẾT HÌNH BÌNH HÀNH</h1>
+            <p class="mt-2 text-blue-100 italic">
+                Quan sát hình vẽ (ký hiệu màu đỏ) để chọn đáp án đúng.
+            </p>
+        </div>
+
+        <div class="case-card">
+            <div class="bg-slate-100 px-6 py-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-blue-900">TRƯỜNG HỢP 1</h2>
+                <div class="bg-white px-3 py-1 rounded text-sm font-bold text-red-600 border border-red-200 shadow-sm">
+                    Giả thiết: $AB = CD$ và $AD = BC$
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2">
+                <div class="svg-wrapper">
+                    <svg viewBox="0 0 320 200">
+                        <polygon points="90,40 270,40 230,160 50,160" class="line-main" />
+                        <line x1="90" y1="40" x2="230" y2="160" class="line-thin" />
+                        <line x1="270" y1="40" x2="50" y2="160" class="line-thin" />
+                        
+                        <line x1="180" y1="32" x2="180" y2="48" class="mark-tick" />
+                        <line x1="140" y1="152" x2="140" y2="168" class="mark-tick" />
+
+                        <g transform="translate(70, 100) rotate(18)">
+                            <line x1="-3" y1="-8" x2="-3" y2="8" class="mark-tick" />
+                            <line x1="3" y1="-8" x2="3" y2="8" class="mark-tick" />
+                        </g>
+                        <g transform="translate(250, 100) rotate(18)">
+                            <line x1="-3" y1="-8" x2="-3" y2="8" class="mark-tick" />
+                            <line x1="3" y1="-8" x2="3" y2="8" class="mark-tick" />
+                        </g>
+
+                        <circle cx="90" cy="40" r="3" class="point-dot"/><text x="75" y="35" class="text-label">A</text>
+                        <circle cx="270" cy="40" r="3" class="point-dot"/><text x="275" y="35" class="text-label">B</text>
+                        <circle cx="230" cy="160" r="3" class="point-dot"/><text x="235" y="175" class="text-label">C</text>
+                        <circle cx="50" cy="160" r="3" class="point-dot"/><text x="35" y="175" class="text-label">D</text>
+                        <circle cx="160" cy="100" r="3" class="point-dot"/><text x="160" y="90" class="text-label" text-anchor="middle">P</text>
+                    </svg>
+                </div>
+                <div class="p-6 flex flex-col justify-between">
+                    <div>
+                        <p class="font-bold text-gray-800 mb-3">1. Chọn các ký hiệu CÓ trên hình:</p>
+                        <div class="space-y-2 mb-6">
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c1_1" class="w-5 h-5 text-blue-600"> <span class="text-lg">$AB = CD$</span></label>
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c1_2" class="w-5 h-5 text-blue-600"> <span class="text-lg">$AD = BC$</span></label>
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c1_3" class="w-5 h-5 text-blue-600"> <span class="text-lg">$AC = BD$</span></label>
+                        </div>
+                        <p class="font-bold text-gray-800 mb-3">2. Kết luận hình này là:</p>
+                        <div class="flex gap-4">
+                            <label class="flex-1 border p-3 rounded flex items-center justify-center cursor-pointer hover:bg-blue-50"><input type="radio" name="res1" value="HBH" class="w-5 h-5 text-blue-600"> <span class="ml-2 font-bold">Hình bình hành</span></label>
+                            <label class="flex-1 border p-3 rounded flex items-center justify-center cursor-pointer hover:bg-blue-50"><input type="radio" name="res1" value="HT" class="w-5 h-5 text-blue-600"> <span class="ml-2 font-bold">Hình thang</span></label>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="check(1)" class="w-full bg-blue-600 text-white font-bold py-3 rounded shadow hover:bg-blue-700 transition">KIỂM TRA</button>
+                        <div id="feed-1" class="hidden mt-3 p-3 rounded text-sm border"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="case-card">
+            <div class="bg-slate-100 px-6 py-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-blue-900">TRƯỜNG HỢP 2</h2>
+                <div class="bg-white px-3 py-1 rounded text-sm font-bold text-red-600 border border-red-200 shadow-sm">
+                    Giả thiết: $AB \parallel CD$ và $AB = CD$
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2">
+                <div class="svg-wrapper">
+                    <svg viewBox="0 0 320 200">
+                        <polygon points="90,40 270,40 230,160 50,160" class="line-main" />
+                        <line x1="90" y1="40" x2="230" y2="160" class="line-thin" />
+                        <line x1="270" y1="40" x2="50" y2="160" class="line-thin" />
+                        
+                        <line x1="180" y1="32" x2="180" y2="48" class="mark-tick" />
+                        <line x1="140" y1="152" x2="140" y2="168" class="mark-tick" />
+
+                        <circle cx="90" cy="40" r="3" class="point-dot"/><text x="75" y="35" class="text-label">A</text>
+                        <circle cx="270" cy="40" r="3" class="point-dot"/><text x="275" y="35" class="text-label">B</text>
+                        <circle cx="230" cy="160" r="3" class="point-dot"/><text x="235" y="175" class="text-label">C</text>
+                        <circle cx="50" cy="160" r="3" class="point-dot"/><text x="35" y="175" class="text-label">D</text>
+                        <circle cx="160" cy="100" r="3" class="point-dot"/><text x="160" y="90" class="text-label" text-anchor="middle">P</text>
+                    </svg>
+                </div>
+                <div class="p-6 flex flex-col justify-between">
+                    <div>
+                        <p class="font-bold text-gray-800 mb-3">1. Chọn các giả thiết đúng:</p>
+                        <div class="space-y-2 mb-6">
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c2_1" class="w-5 h-5 text-blue-600"> <span class="text-lg">$AB \parallel CD$</span></label>
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c2_2" class="w-5 h-5 text-blue-600"> <span class="text-lg">$AB = CD$</span></label>
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c2_3" class="w-5 h-5 text-blue-600"> <span class="text-lg">$AD = BC$</span></label>
+                        </div>
+                        <p class="font-bold text-gray-800 mb-3">2. Kết luận hình này là:</p>
+                        <div class="flex gap-4">
+                            <label class="flex-1 border p-3 rounded flex items-center justify-center cursor-pointer hover:bg-blue-50"><input type="radio" name="res2" value="HBH" class="w-5 h-5 text-blue-600"> <span class="ml-2 font-bold">Hình bình hành</span></label>
+                            <label class="flex-1 border p-3 rounded flex items-center justify-center cursor-pointer hover:bg-blue-50"><input type="radio" name="res2" value="HT" class="w-5 h-5 text-blue-600"> <span class="ml-2 font-bold">Hình thang</span></label>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="check(2)" class="w-full bg-blue-600 text-white font-bold py-3 rounded shadow hover:bg-blue-700 transition">KIỂM TRA</button>
+                        <div id="feed-2" class="hidden mt-3 p-3 rounded text-sm border"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="case-card">
+            <div class="bg-slate-100 px-6 py-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-blue-900">TRƯỜNG HỢP 3</h2>
+                <div class="bg-white px-3 py-1 rounded text-sm font-bold text-red-600 border border-red-200 shadow-sm">
+                    Giả thiết: $AD \parallel BC$ và $AD = BC$
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2">
+                <div class="svg-wrapper">
+                    <svg viewBox="0 0 320 200">
+                        <polygon points="90,40 270,40 230,160 50,160" class="line-main" />
+                        <line x1="90" y1="40" x2="230" y2="160" class="line-thin" />
+                        <line x1="270" y1="40" x2="50" y2="160" class="line-thin" />
+                        
+                        <g transform="translate(70, 100) rotate(18)">
+                            <line x1="-3" y1="-8" x2="-3" y2="8" class="mark-tick" />
+                            <line x1="3" y1="-8" x2="3" y2="8" class="mark-tick" />
+                        </g>
+                        <g transform="translate(250, 100) rotate(18)">
+                            <line x1="-3" y1="-8" x2="-3" y2="8" class="mark-tick" />
+                            <line x1="3" y1="-8" x2="3" y2="8" class="mark-tick" />
+                        </g>
+
+                        <circle cx="90" cy="40" r="3" class="point-dot"/><text x="75" y="35" class="text-label">A</text>
+                        <circle cx="270" cy="40" r="3" class="point-dot"/><text x="275" y="35" class="text-label">B</text>
+                        <circle cx="230" cy="160" r="3" class="point-dot"/><text x="235" y="175" class="text-label">C</text>
+                        <circle cx="50" cy="160" r="3" class="point-dot"/><text x="35" y="175" class="text-label">D</text>
+                        <circle cx="160" cy="100" r="3" class="point-dot"/><text x="160" y="90" class="text-label" text-anchor="middle">P</text>
+                    </svg>
+                </div>
+                <div class="p-6 flex flex-col justify-between">
+                    <div>
+                        <p class="font-bold text-gray-800 mb-3">1. Chọn các giả thiết đúng:</p>
+                        <div class="space-y-2 mb-6">
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c3_1" class="w-5 h-5 text-blue-600"> <span class="text-lg">$AD \parallel BC$</span></label>
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c3_2" class="w-5 h-5 text-blue-600"> <span class="text-lg">$AD = BC$</span></label>
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c3_3" class="w-5 h-5 text-blue-600"> <span class="text-lg">$AB \parallel CD$</span></label>
+                        </div>
+                        <p class="font-bold text-gray-800 mb-3">2. Kết luận hình này là:</p>
+                        <div class="flex gap-4">
+                            <label class="flex-1 border p-3 rounded flex items-center justify-center cursor-pointer hover:bg-blue-50"><input type="radio" name="res3" value="HBH" class="w-5 h-5 text-blue-600"> <span class="ml-2 font-bold">Hình bình hành</span></label>
+                            <label class="flex-1 border p-3 rounded flex items-center justify-center cursor-pointer hover:bg-blue-50"><input type="radio" name="res3" value="HT" class="w-5 h-5 text-blue-600"> <span class="ml-2 font-bold">Hình thang</span></label>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="check(3)" class="w-full bg-blue-600 text-white font-bold py-3 rounded shadow hover:bg-blue-700 transition">KIỂM TRA</button>
+                        <div id="feed-3" class="hidden mt-3 p-3 rounded text-sm border"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="case-card">
+            <div class="bg-slate-100 px-6 py-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-blue-900">TRƯỜNG HỢP 4</h2>
+                <div class="bg-white px-3 py-1 rounded text-sm font-bold text-red-600 border border-red-200 shadow-sm">
+                    Giả thiết: $\widehat{A} = \widehat{C}$ và $\widehat{B} = \widehat{D}$
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2">
+                <div class="svg-wrapper">
+                    <svg viewBox="0 0 320 200">
+                        <polygon points="90,40 270,40 230,160 50,160" class="line-main" />
+                        <line x1="90" y1="40" x2="230" y2="160" class="line-thin" />
+                        <line x1="270" y1="40" x2="50" y2="160" class="line-thin" />
+
+                        <path d="M115,40 A 25,25 0 0 1 82,64" class="mark-angle" />
+                        <path d="M205,160 A 25,25 0 0 1 238,136" class="mark-angle" />
+
+                        <path d="M245,40 A 25,25 0 0 0 258,62" class="mark-angle" />
+                        <path d="M240,40 A 30,30 0 0 0 256,66" class="mark-angle" />
+
+                        <path d="M75,160 A 25,25 0 0 0 62,138" class="mark-angle" />
+                        <path d="M80,160 A 30,30 0 0 0 64,134" class="mark-angle" />
+
+                        <circle cx="90" cy="40" r="3" class="point-dot"/><text x="75" y="35" class="text-label">A</text>
+                        <circle cx="270" cy="40" r="3" class="point-dot"/><text x="275" y="35" class="text-label">B</text>
+                        <circle cx="230" cy="160" r="3" class="point-dot"/><text x="235" y="175" class="text-label">C</text>
+                        <circle cx="50" cy="160" r="3" class="point-dot"/><text x="35" y="175" class="text-label">D</text>
+                        <circle cx="160" cy="100" r="3" class="point-dot"/><text x="160" y="90" class="text-label" text-anchor="middle">P</text>
+                    </svg>
+                </div>
+                <div class="p-6 flex flex-col justify-between">
+                    <div>
+                        <p class="font-bold text-gray-800 mb-3">1. Chọn các giả thiết đúng:</p>
+                        <div class="space-y-2 mb-6">
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c4_1" class="w-5 h-5 text-blue-600"> <span class="text-lg">$\widehat{A} = \widehat{C}$</span></label>
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c4_2" class="w-5 h-5 text-blue-600"> <span class="text-lg">$\widehat{B} = \widehat{D}$</span></label>
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c4_3" class="w-5 h-5 text-blue-600"> <span class="text-lg">$AC \perp BD$</span></label>
+                        </div>
+                        <p class="font-bold text-gray-800 mb-3">2. Kết luận hình này là:</p>
+                        <div class="flex gap-4">
+                            <label class="flex-1 border p-3 rounded flex items-center justify-center cursor-pointer hover:bg-blue-50"><input type="radio" name="res4" value="HBH" class="w-5 h-5 text-blue-600"> <span class="ml-2 font-bold">Hình bình hành</span></label>
+                            <label class="flex-1 border p-3 rounded flex items-center justify-center cursor-pointer hover:bg-blue-50"><input type="radio" name="res4" value="HT" class="w-5 h-5 text-blue-600"> <span class="ml-2 font-bold">Hình thang</span></label>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="check(4)" class="w-full bg-blue-600 text-white font-bold py-3 rounded shadow hover:bg-blue-700 transition">KIỂM TRA</button>
+                        <div id="feed-4" class="hidden mt-3 p-3 rounded text-sm border"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="case-card">
+            <div class="bg-slate-100 px-6 py-4 border-b flex justify-between items-center">
+                <h2 class="text-xl font-bold text-blue-900">TRƯỜNG HỢP 5</h2>
+                <div class="bg-white px-3 py-1 rounded text-sm font-bold text-red-600 border border-red-200 shadow-sm">
+                    Giả thiết: $PA = PC$ và $PB = PD$
+                </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2">
+                <div class="svg-wrapper">
+                    <svg viewBox="0 0 320 200">
+                        <polygon points="90,40 270,40 230,160 50,160" class="line-main" />
+                        <line x1="90" y1="40" x2="230" y2="160" class="line-main" />
+                        <line x1="270" y1="40" x2="50" y2="160" class="line-main" />
+
+                        <g transform="translate(125, 70) rotate(-50)">
+                            <line x1="0" y1="-8" x2="0" y2="8" class="mark-tick" />
+                        </g>
+                        <g transform="translate(195, 130) rotate(-50)">
+                            <line x1="0" y1="-8" x2="0" y2="8" class="mark-tick" />
+                        </g>
+                        
+                        <g transform="translate(105, 130) rotate(62)">
+                            <line x1="-3" y1="-8" x2="-3" y2="8" class="mark-tick" />
+                            <line x1="3" y1="-8" x2="3" y2="8" class="mark-tick" />
+                        </g>
+                        <g transform="translate(215, 70) rotate(62)">
+                            <line x1="-3" y1="-8" x2="-3" y2="8" class="mark-tick" />
+                            <line x1="3" y1="-8" x2="3" y2="8" class="mark-tick" />
+                        </g>
+
+                        <circle cx="90" cy="40" r="3" class="point-dot"/><text x="75" y="35" class="text-label">A</text>
+                        <circle cx="270" cy="40" r="3" class="point-dot"/><text x="275" y="35" class="text-label">B</text>
+                        <circle cx="230" cy="160" r="3" class="point-dot"/><text x="235" y="175" class="text-label">C</text>
+                        <circle cx="50" cy="160" r="3" class="point-dot"/><text x="35" y="175" class="text-label">D</text>
+                        <circle cx="160" cy="100" r="3" class="point-dot"/><text x="160" y="90" class="text-label" text-anchor="middle">P</text>
+                    </svg>
+                </div>
+                <div class="p-6 flex flex-col justify-between">
+                    <div>
+                        <p class="font-bold text-gray-800 mb-3">1. Chọn các giả thiết đúng:</p>
+                        <div class="space-y-2 mb-6">
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c5_1" class="w-5 h-5 text-blue-600"> <span class="text-lg">$PA = PC$</span></label>
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c5_2" class="w-5 h-5 text-blue-600"> <span class="text-lg">$PB = PD$</span></label>
+                            <label class="flex items-center space-x-3 p-2 bg-slate-50 rounded border hover:bg-white cursor-pointer"><input type="checkbox" id="c5_3" class="w-5 h-5 text-blue-600"> <span class="text-lg">$AB = BC$</span></label>
+                        </div>
+                        <p class="font-bold text-gray-800 mb-3">2. Kết luận hình này là:</p>
+                        <div class="flex gap-4">
+                            <label class="flex-1 border p-3 rounded flex items-center justify-center cursor-pointer hover:bg-blue-50"><input type="radio" name="res5" value="HBH" class="w-5 h-5 text-blue-600"> <span class="ml-2 font-bold">Hình bình hành</span></label>
+                            <label class="flex-1 border p-3 rounded flex items-center justify-center cursor-pointer hover:bg-blue-50"><input type="radio" name="res5" value="HT" class="w-5 h-5 text-blue-600"> <span class="ml-2 font-bold">Hình thang</span></label>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button onclick="check(5)" class="w-full bg-blue-600 text-white font-bold py-3 rounded shadow hover:bg-blue-700 transition">KIỂM TRA</button>
+                        <div id="feed-5" class="hidden mt-3 p-3 rounded text-sm border"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // CẤU HÌNH ĐÁP ÁN
+        const answers = {
+            1: { 
+                req: ['c1_1', 'c1_2'], 
+                ban: ['c1_3'], 
+                msg: "Tứ giác có <strong>các cạnh đối bằng nhau</strong> là Hình bình hành." 
+            },
+            2: { 
+                req: ['c2_1', 'c2_2'], 
+                ban: ['c2_3'], 
+                msg: "Tứ giác có <strong>một cặp cạnh đối vừa song song vừa bằng nhau</strong> là Hình bình hành." 
+            },
+            3: { 
+                req: ['c3_1', 'c3_2'], 
+                ban: ['c3_3'], 
+                msg: "Tứ giác có <strong>cặp cạnh đối $AD$ và $BC$ vừa song song vừa bằng nhau</strong> là Hình bình hành." 
+            },
+            4: { 
+                req: ['c4_1', 'c4_2'], 
+                ban: ['c4_3'], 
+                msg: "Tứ giác có <strong>các góc đối bằng nhau</strong> là Hình bình hành." 
+            },
+            5: { 
+                req: ['c5_1', 'c5_2'], 
+                ban: ['c5_3'], 
+                msg: "Tứ giác có <strong>hai đường chéo cắt nhau tại trung điểm mỗi đường</strong> là Hình bình hành." 
+            }
+        };
+
+        function check(id) {
+            const data = answers[id];
+            const feed = document.getElementById(`feed-${id}`);
+            
+            // 1. Kiểm tra Checkbox
+            const isCheckboxCorrect = 
+                data.req.every(cid => document.getElementById(cid).checked) &&
+                data.ban.every(cid => !document.getElementById(cid).checked);
+            
+            // 2. Kiểm tra Radio
+            const radio = document.querySelector(`input[name="res${id}"]:checked`);
+            
+            feed.classList.remove('hidden');
+            
+            if (!radio) {
+                feed.className = "mt-3 p-3 rounded border bg-yellow-100 text-yellow-800 border-yellow-300";
+                feed.innerHTML = ⚠️ Chưa chọn đáp án cho câu 2.";
+                return;
+            }
+
+            if (!isCheckboxCorrect) {
+                feed.className = "mt-3 p-3 rounded border bg-red-100 text-red-800 border-red-300";
+                feed.innerHTML = "❌ <strong>Câu 1 Sai:</strong> Hãy xem kỹ giả thiết và ký hiệu trên hình để chọn đúng.";
+                return;
+            }
+
+            if (radio.value !== "HBH") {
+                feed.className = "mt-3 p-3 rounded border bg-orange-100 text-orange-800 border-orange-300";
+                feed.innerHTML = "❌ <strong>Câu 2 Sai:</strong> Dấu hiệu này dùng để nhận biết Hình bình hành.";
+                return;
+            }
+
+            // Đúng hết
+            feed.className = "mt-3 p-3 rounded border bg-green-100 text-green-900 border-green-300";
+            feed.innerHTML = `✅ <strong>Chính xác!</strong><br>${data.msg}`;
+            if (window.MathJax) MathJax.typesetPromise([feed]);
+        }
+    </script>
+</body>
+</html>
