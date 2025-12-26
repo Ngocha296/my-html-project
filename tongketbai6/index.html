@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sơ đồ tư duy: Hình Vuông</title>
+<style>
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f0f2f5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        margin: 0;
+        user-select: none;
+    }
+    h1 { color: #333; margin-bottom: 20px; }
+    .mindmap-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 1000px;
+        margin-bottom: 40px;
+    }
+    .center-node {
+        background-color: #2c3e50;
+        color: white;
+        padding: 20px 40px;
+        border-radius: 50px;
+        font-size: 1.5em;
+        font-weight: bold;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        margin-bottom: 40px;
+        position: relative;
+        z-index: 2;
+    }
+    .branches-container {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        gap: 20px;
+        position: relative;
+    }
+    .branches-container::before {
+        content: '';
+        position: absolute;
+        top: -40px;
+        left: 50%;
+        width: 2px;
+        height: 40px;
+        background-color: #95a5a6;
+        z-index: 0;
+    }
+    .branches-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 15%;
+        right: 15%;
+        height: 2px;
+        background-color: #95a5a6;
+        z-index: 0;
+    }
+    .branch-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
+    .branch-column::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 2px;
+        height: 20px;
+        background-color: #95a5a6;
+    }
+    .drop-zone {
+        background-color: #fff;
+        border: 2px dashed #3498db;
+        border-radius: 10px;
+        padding: 15px;
+        width: 90%;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+        transition: all 0.3s ease;
+    }
+    .drop-zone h3 {
+        margin: 0 0 10px 0;
+        color: #2980b9;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        width: 100%;
+        padding-bottom: 5px;
+    }
+    .items-pool {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+        padding: 20px;
+        background-color: #dfe6e9;
+        border-radius: 15px;
+        width: 100%;
+        max-width: 1000px;
+        min-height: 100px;
+    }
+    .draggable-item {
+        background-color: #3498db;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: grab;
+        font-size: 0.9em;
+        max-width: 250px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s, background-color 0.3s;
+    }
+    .draggable-item:active {
+        cursor: grabbing;
+        transform: scale(1.05);
+    }
+    .draggable-item.correct {
+        background-color: #27ae60 !important;
+        cursor: default;
+        border: 1px solid #219150;
+    }
+    @keyframes blink-red {
+        0% { background-color: #fff; border-color: #3498db; }
+        25% { background-color: #ffcccc; border-color: #e74c3c; }
+        50% { background-color: #fff; border-color: #3498db; }
+        75% { background-color: #ffcccc; border-color: #e74c3c; }
+        100% { background-color: #fff; border-color: #3498db; }
+    }
+    .error-blink {
+        animation: blink-red 0.5s ease-in-out;
+    }
+</style>
+</head>
+<body>
+
+    <h1>Bài 6: Hình Vuông</h1>
+
+    <div class="mindmap-container">
+        <div class="center-node">HÌNH VUÔNG</div>
+        
+        <div class="branches-container">
+            <div class="branch-column">
+                <div class="drop-zone" id="zone-khainiem" ondrop="drop(event)" ondragover="allowDrop(event)" data-target="khainiem">
+                    <h3>Khái niệm</h3>
+                </div>
+            </div>
+            <div class="branch-column">
+                <div class="drop-zone" id="zone-tinhchat" ondrop="drop(event)" ondragover="allowDrop(event)" data-target="tinhchat">
+                    <h3>Tính chất</h3>
+                </div>
+            </div>
+            <div class="branch-column">
+                <div class="drop-zone" id="zone-dauhieu" ondrop="drop(event)" ondragover="allowDrop(event)" data-target="dauhieu">
+                    <h3>Dấu hiệu nhận biết</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr style="width: 80%; border: 1px solid #ccc; margin: 20px 0;">
+    <p><i>Kéo các thẻ bên dưới vào nhánh phù hợp ở trên:</i></p>
+
+    <div class="items-pool" id="pool">
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item1" data-group="khainiem">
+            Tứ giác có bốn góc vuông và bốn cạnh bằng nhau
+        </div>
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item2" data-group="tinhchat">
+            Hai đường chéo bằng nhau và cắt nhau tại trung điểm của mỗi đường
+        </div>
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item3" data-group="tinhchat">
+            Hai đường chéo vuông góc với nhau
+        </div>
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item4" data-group="tinhchat">
+            Hai đường chéo là các đường phân giác của các góc
+        </div>
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item5" data-group="dauhieu">
+            Hình chữ nhật có hai cạnh kề bằng nhau
+        </div>
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item6" data-group="dauhieu">
+            Hình chữ nhật có hai đường chéo vuông góc với nhau
+        </div>
+        <div class="draggable-item" draggable="true" ondragstart="drag(event)" id="item7" data-group="dauhieu">
+            Hình chữ nhật có một đường chéo là đường phân giác của một góc
+        </div>
+    </div>
+
+    <script>
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+            ev.dataTransfer.setData("group", ev.target.getAttribute("data-group"));
+        }
+        function drop(ev) {
+            ev.preventDefault();
+            var data = ev.dataTransfer.getData("text");
+            var itemGroup = ev.dataTransfer.getData("group");
+            var targetZone = ev.target.closest('.drop-zone');
+            
+            if (!targetZone) return;
+
+            var targetGroup = targetZone.getAttribute("data-target");
+
+            if (itemGroup === targetGroup) {
+                var draggedElement = document.getElementById(data);
+                targetZone.appendChild(draggedElement);
+                draggedElement.classList.add("correct");
+                draggedElement.setAttribute("draggable", "false");
+            } else {
+                targetZone.classList.add("error-blink");
+                setTimeout(function() {
+                    targetZone.classList.remove("error-blink");
+                }, 500);
+            }
+        }
+        window.onload = function() {
+            var pool = document.getElementById("pool");
+            for (var i = pool.children.length; i >= 0; i--) {
+                pool.appendChild(pool.children[Math.random() * i | 0]);
+            }
+        };
+    </script>
+</body>
+</html>
